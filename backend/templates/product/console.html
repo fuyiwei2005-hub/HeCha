@@ -1,0 +1,42 @@
+<section data-pages="detect" id="console" class="console reveal">
+    <div class="cbar">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="title">禾察 · 实时检测控制台</div>
+      <div class="live">LIVE</div>
+    </div>
+    <div class="cbody">
+      <div class="cleft">
+        <div class="leaf-stage" id="stage">
+          <div class="ph" id="stagePh">
+            <div class="big">🌿</div>
+            <h3 class="serif">等待叶片照片</h3>
+            <p>点击右侧或下方"选择图片"开始检测</p>
+          </div>
+          <img class="result" id="stageImg" style="display:none">
+          <label class="dropzone">
+            <span>📷 点击上传图片 / 拖拽到这里</span>
+            <input type="file" id="imgFile" accept="image/jpeg,image/png,image/webp" hidden>
+          </label>
+        </div>
+        <!-- 作物上下文（寄主先验）：选了能给排序加权 + 让 AI 建议贴合该作物；不选也照常检测 -->
+        <div class="crop-bar">
+          <label class="crop-lb" for="cropSel">🌾 拍摄作物</label>
+          <select id="cropSel" class="crop-sel" disabled>
+            <option value="">加载中…</option>
+          </select>
+          <div class="crop-tip" id="cropTip">告知作物可让系统结合寄主规律校正识别、并生成更贴合的建议；不指定也能正常使用。</div>
+        </div>
+      </div>
+      <div class="cright">
+        <div style="display:flex;align-items:center;justify-content:space-between"><h4 style="margin:0">实时分析</h4><button id="camBtn" onclick="openCamera()" style="padding:7px 16px;border:1.5px solid #047857;border-radius:20px;background:rgba(4,120,87,0.06);color:#047857;font-size:13px;font-weight:600;cursor:pointer">📸 拍照</button></div>
+        <div class="sub" id="anSub">尚未检测 · 支持 JPG / PNG / WebP，≤10MB</div>
+        <div id="resList">
+          <div class="res-card"><div class="r-top"><span class="r-name">等待上传</span></div><div class="bar"><i></i></div></div>
+        </div>
+        <div class="advice" id="advice"><b>💡 防治建议</b><br>上传叶片照片后，AI 将在此给出识别结论、危害症状与用药建议。</div>
+        <div id="chatBox" style="display:none"></div>
+        <div class="msg" id="upMsg"></div>
+        <button class="btn-full" onclick="location.href='/history'">查看历史记录 →</button>
+      </div>
+    </div>
+  </section>

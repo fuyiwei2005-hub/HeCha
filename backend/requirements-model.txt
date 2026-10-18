@@ -1,0 +1,15 @@
+# Optional runtime for the bundled customized YOLOv12 package.
+torch==2.6.0
+torchvision==0.21.0
+matplotlib==3.10.1
+scipy==1.15.2
+pandas==2.2.3
+seaborn==0.13.2
+tqdm==4.67.1
+PyYAML==6.0.2
+requests==2.32.3
+# 仓库内置了定制版 ultralytics/ 源码包（不走 pip 安装），
+# 它的运行时依赖不会出现在本仓库任何 pip 元数据里，必须在这里显式声明。
+# 漏装 psutil 时首次调用检测会抛 ModuleNotFoundError -> 接口 500，
+# 且 health 检查完全看不出来（模型在首次推理时才 import）。
+psutil>=5.9

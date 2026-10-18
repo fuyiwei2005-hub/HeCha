@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 没有这一行，手机会把页面当成 980px 宽的桌面站等比缩小后再显示：
+         响应式全部失效，评委用手机打开看到的是一个"小号桌面页面"。 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#173f34" />
+    <meta name="description" content="禾察 农作物害虫智能识别与植保决策平台：上传叶片照片，YOLO 定位虫体识别虫种，结合作物上下文与植保知识库生成带溯源的防治建议。" />
+    <title>禾察 · 农作物害虫智能识别与植保决策</title>
+
+    <link rel="icon" href="/leaf.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/leaf.svg" />
+
+    <style>
+      /* JS 加载完成前的兜底：避免长时间白屏。
+         内联在此，不依赖外部 CSS/JS 是否可用。 */
+      #boot {
+        position: fixed; inset: 0; display: grid; place-items: center;
+        gap: 14px; background: #f4f2ea; color: #173f34;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+          'Microsoft YaHei', sans-serif; grid-auto-flow: row;
+      }
+      #boot .ring {
+        width: 26px; height: 26px; border-radius: 50%;
+        border: 2.5px solid #c3cec7; border-top-color: #173f34;
+        animation: bootspin .8s linear infinite;
+      }
+      #boot span { font-size: 13px; color: #56846b; letter-spacing: .04em; }
+      @keyframes bootspin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="boot"><div class="ring"></div><span>正在加载 禾察…</span></div>
+    </div>
+
+    <noscript>
+      <div style="padding: 48px; text-align: center; font-family: sans-serif; color: #173f34;">
+        本页面需要启用 JavaScript 才能运行。请在浏览器设置中开启后重试。
+      </div>
+    </noscript>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

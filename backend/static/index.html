@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="/static/product/session-entry.js"></script>
+<title>禾察 · 智能植保决策平台</title>
+<!-- 内联叶子图标：省掉一次 favicon.ico 404，标签页也认得出品牌 -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23059669'/%3E%3Cpath d='M24 7c0 9-6 14-13 14 0-8 5-13 13-14z' fill='%23a7f3d0'/%3E%3Cpath d='M9 25c2-6 6-10 11-12' stroke='%23ecfdf5' stroke-width='1.6' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;800;900&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/product/app.css">
+</head>
+<body>
+<script defer src="/static/product/enhance.js"></script>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<svg class="vine tr" viewBox="0 0 300 300" fill="none" stroke="#059669" stroke-width="2"><path d="M300,0 C200,60 180,140 220,220 C240,260 280,280 300,300"/><path d="M250,80 q-30,0 -40,-25 M230,150 q-30,5 -35,-20 M240,220 q-25,10 -20,-15"/></svg>
+<svg class="vine bl" viewBox="0 0 300 300" fill="none" stroke="#059669" stroke-width="2"><path d="M300,0 C200,60 180,140 220,220 C240,260 280,280 300,300"/></svg>
+
+<button id="menuBackdrop" class="menu-backdrop" type="button" aria-label="关闭功能菜单" tabindex="-1" hidden></button>
+<aside id="moduleSidebar" class="side-nav" aria-label="功能导航">
+  <button id="menuToggle" class="menu-toggle" type="button" aria-label="展开功能菜单" aria-controls="moduleNav" aria-expanded="false"><span aria-hidden="true">☰</span><span class="side-label">功能导航</span></button>
+    <div class="nav-links" id="moduleNav" aria-label="模块导航" inert>
+      <a href="/">首页</a><a href="/detect">图片识别</a><a href="/video">视频识别</a><a href="/history">历史记录</a><a href="/statistics">数据统计</a><a href="/features">核心能力</a><a href="/about">技术介绍</a>
+    <a href="/model">模型说明</a><a href="/contact">联系我们</a><a href="/deployment">源码与部署</a></div></aside>
+
+<div class="wrap">
+  <!-- 顶栏 -->
+  <nav class="nav" id="nav">
+    <a class="logo" href="/" aria-label="禾察 首页"><div class="mark">🌿</div> 禾察</a>
+
+    <div class="nav-right">
+      <button class="nav-cta" id="topCta">免费试用</button>
+      <!-- 已登录时顶栏换成「当前账号 + 退出」：换账号必须能退出，否则一个浏览器只能绑死一个账号 -->
+      <div class="nav-user" id="navUser" style="display:none">
+        <span class="nav-who" id="navWho"></span>
+        <button class="nav-out" id="logoutBtn" title="退出当前账号，可换一个账号登录">退出登录</button>
+      </div>
+    </div>
+  </nav>{{page_heading}}
+
+  <!-- Hero -->
+  {{fragment:hero.html}}
+
+{{fragment:modules.html}}{{fragment:infoPage.html}}
+  <!-- 登录卡片（未登录时显示） -->
+  {{fragment:authCard.html}}
+
+  <!-- 控制台（真上传真检测） -->
+  {{fragment:console.html}}
+
+  <!-- 视频上传条 -->
+  {{fragment:videoUpload.html}}
+
+  <!-- 统计 -->
+  {{fragment:statistics.html}}
+
+  <!-- 三步 -->
+  {{fragment:hero-7.html}}
+
+  <!-- 历史（真数据） -->
+  {{fragment:history.html}}
+
+  <!-- 能力矩阵 -->
+  {{fragment:feats.html}}
+
+  <!-- 技术链路 -->
+  {{fragment:pipe.html}}
+
+  <!-- CTA -->
+  {{fragment:hero-11.html}}
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="foot-grid">
+      <div>
+        <div class="logo" style="margin-bottom:12px"><div class="mark">🌿</div> 禾察</div>
+        <p style="font-size:13px;color:var(--muted)">AI 驱动的智能植保决策平台，让每一株植物都被温柔守护。</p>
+      </div>
+      <div><h5>产品</h5><a href="/detect">实时检测</a><a href="/history">历史记录</a><a href="/features">能力矩阵</a></div>
+      <div><h5>资源</h5><a href="/about">技术链路</a><a href="/docs" target="_blank" rel="noopener">API 文档</a><a href="/model">模型说明</a></div>
+      <div><h5>联系</h5><a href="/contact">联系我们</a><a href="javascript:void(0)" onclick="copyEmail(this)">1826244602@qq.com</a><a href="/deployment">源码与部署</a></div>
+    </div>
+  </footer>
+</div>
+
+<script defer src="/static/product/shared.js"></script>
+<script defer src="/static/product/transport.js"></script>
+<script defer src="/static/product/session.js"></script>
+<script defer src="/static/product/uploads.js"></script>
+<script defer src="/static/product/results.js"></script>
+<script defer src="/static/product/statistics.js"></script>
+<script defer src="/static/product/information.js"></script>
+<script defer src="/static/product/authentication.js"></script>
+
+<!-- 摄像头弹窗 -->
+<div id="camModal" onclick="if(event.target===this) closeCamera()" style="display:none;position:fixed;inset:0;background:rgba(12,31,23,0.85);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:20px;max-width:640px;width:90%">
+    <h3 style="margin:0 0 12px;color:#0C1F17">📸 对准叶片，点击拍照</h3>
+    <video id="camVideo" autoplay playsinline style="width:100%;border-radius:10px;background:#000;max-height:420px"></video>
+    <div style="display:flex;gap:10px;margin-top:14px;justify-content:center">
+      <button onclick="snapPhoto()" style="padding:10px 28px;border:none;border-radius:24px;background:#047857;color:#fff;font-size:16px;cursor:pointer">📷 快门</button>
+      <button onclick="closeCamera()" style="padding:10px 24px;border:1px solid #047857;border-radius:24px;background:#fff;color:#047857;font-size:16px;cursor:pointer">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 信息弹窗：联系我们 / 模型说明 / 源码与部署 -->
+<div id="infoModal" style="display:none;position:fixed;inset:0;background:rgba(12,31,23,0.72);z-index:9998;align-items:center;justify-content:center;padding:20px">
+  <div class="im-box" role="dialog" aria-modal="true" aria-labelledby="imTitle">
+    <button class="im-x" onclick="closeInfo()" aria-label="关闭">×</button>
+    <h3 class="serif" id="imTitle"></h3>
+    <div id="imBody"></div>
+  </div>
+</div>
+
+<canvas id="camCanvas" style="display:none"></canvas>
+<script defer src="/static/product/camera.js"></script>
+
+<script defer src="/static/product/service-status.js"></script><script defer src="/static/product/navigation.js"></script>
+</body>
+</html>

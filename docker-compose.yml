@@ -1,0 +1,161 @@
+# x-logging 锚点：日志上限是硬要求。json-file 默认无限增长，
+# 路演机跑一个月磁盘就被日志撑爆，而且排障时也只需要最近的日志。
+x-logging: &default-logging
+  driver: json-file
+  options: {max-size: "10m", max-file: "3"}
+
+# x-app-env 锚点：api 与 worker 的环境变量曾经是两份逐字重复的清单，
+# 于是 DEEPSEEK_* / TRUST_PROXY 加进了 .env、加进了 setup.sh、
+# 却谁也没加到这里 —— 结果旗舰功能「AI 防治建议 + 引用溯源」在容器里
+# 永远是关的（llm.enabled 恒为 False），而 README 的排查指引
+#（"若为空检查 DEEPSEEK_API_KEY"）指向的是一份完全正确的 .env。
+# 收拢成一份，以后新增配置不会再漏。
+x-app-env: &app-env
+  APP_ENV: production
+  # :? 让"忘了写 .env"立刻报错，而不是悄悄用空值把服务拉起来
+  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY 未设置 —— 请先复制 .env.example 为 .env}
+  DATABASE_URL: postgresql+asyncpg://pestguard:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置}@db:5432/pestguard
+  REDIS_URL: redis://redis:6379/0
+  MODEL_PATH: ${MODEL_PATH:-}
+  ALLOW_MOCK_DETECTOR: ${ALLOW_MOCK_DETECTOR:-false}
+  # ---- DeepSeek 二次解读（可选，留空即自动关闭，不影响 YOLO 主流程）----
+  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+  DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+  DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+  DEEPSEEK_THINKING_PARAM: ${DEEPSEEK_THINKING_PARAM:-}
+  # ---- 反向代理后开启 ----
+  # 走 frontend/nginx.conf 或 deploy/nginx-site.conf 代理时必须为 true，
+  # 否则 get_client_ip 看到的是代理地址，登录限流会退化成全局 10 次/分钟。
+  TRUST_PROXY: ${TRUST_PROXY:-false}
+
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        INSTALL_YOLO: ${INSTALL_YOLO:-false}
+    logging: *default-logging
+    environment:
+      <<: *app-env
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+    volumes:
+      # 只把「用户数据」挂成可写卷：uploads / results。
+      # 知识库（data/knowledge）与寄主先验表（data/host_prior.json）由镜像提供、只读，
+      # 绝不能被一个空具名卷盖在 /app/data 上——那会让RAG「引用溯源」与寄主先验
+      # 在容器里静默失效，而 /api/health 看不出来。
+      - pest_uploads:/app/data/uploads
+      - pest_results:/app/data/results
+      - ./model_weights:/models:ro
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      # 首包要加载模型 + 建 RAG 索引，给足预热时间再判定失败
+      start_period: 90s
+    restart: unless-stopped
+    # 内存上限：低配机上模型 + torch 吃满内存会把整台机器拖死，
+    # 限流后 OOM 只杀本容器（restart 拉起），不至于连累 db/redis
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        INSTALL_YOLO: ${INSTALL_YOLO:-false}
+    logging: *default-logging
+    command: arq app.workers.video.WorkerSettings
+    environment: *app-env
+    volumes:
+      # 同api：只挂用户数据目录，知识库与寄主先验留在镜像里（只读）。
+      - pest_uploads:/app/data/uploads
+      - pest_results:/app/data/results
+      - ./model_weights:/models:ro
+    depends_on:
+      api: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    # worker 没有 HTTP 端口，健康检查用"能否连上 Redis"代替；
+    # 之前它没有任何 healthcheck，卡死时 docker compose ps 仍显示 Up。
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import redis,os;redis.from_url(os.environ['REDIS_URL']).ping()\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  analysis-worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        INSTALL_YOLO: "false"
+    logging: *default-logging
+    command: arq app.workers.analysis.WorkerSettings
+    environment: *app-env
+    depends_on:
+      api: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  web:
+    build: ./frontend
+    logging: *default-logging
+    ports: ["8080:80"]
+    profiles: ["web"]   # 默认不启动：演示直接用 :8000（后端托管的前端构建产物）
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+    # 走这个前端时必须信任代理头，否则登录限流按 nginx 容器 IP 计数，
+    # 所有用户共享 10 次/分钟 的配额。
+    environment:
+      TRUST_PROXY: "true"
+
+  db:
+    image: postgres:17-alpine
+    logging: *default-logging
+    environment:
+      POSTGRES_USER: pestguard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置}
+      POSTGRES_DB: pestguard
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U pestguard -d pestguard"], interval: 5s, timeout: 5s, retries: 10}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  redis:
+    image: redis:7.4-alpine
+    logging: *default-logging
+    # maxmemory + 淘汰策略：限流计数与 jti 吊销名单都是可丢的缓存数据，
+    # 但不设上限时 Redis 会一直涨，最后被 OOM killer 干掉。
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
+    volumes: ["redis_data:/data"]
+    healthcheck: {test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 10}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+
+volumes: {pest_uploads: {}, pest_results: {}, postgres_data: {}, redis_data: {}}

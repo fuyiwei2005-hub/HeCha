@@ -1,0 +1,49 @@
+# Docker 构建上下文排除表（build context = ./backend，见 docker-compose.yml）
+#
+# 为什么必须有这个文件：.dockerignore 是 Docker 唯一会自动遵守的忽略规则，
+# .gitignore 只管 git。没有它时，整个 backend/ 目录会被打包发给 Docker daemon，
+# 后果有两个：
+#   ① 体积：.venv 近2GB，光传输就要几十秒；
+#   ② 安全：backend/.env 里的真实 SECRET_KEY / DEEPSEEK_API_KEY 会被送进
+#      daemon 的构建缓存，任何能碰到 daemon 的人都能捞出来。
+#
+# 注意：这里只列「绝对不能进构建上下文」的条目，
+# 不要在这里重复 .gitignore 的全部内容——两份清单各管一头，重复维护必然漂移。
+
+# ---- 密钥与本地环境 ----
+.env
+.env.*
+!.env.example
+
+# ---- 依赖与缓存（可重建，且体积巨大）----
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+
+# ---- 测试与临时产物 ----
+backups/
+_backups/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+*.bak
+.pt_tmp/
+
+# ---- 运行时用户数据：uploads/results 是用户上传的图片与标注结果，
+#      既不该进镜像，也不该拖慢构建（Dockerfile 只 COPY data/ 下的两个只读文件）----
+data/uploads/
+data/results/
+
+# ---- 本地配置 ----
+.git/
+.idea/
+.vscode/
+*.log

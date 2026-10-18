@@ -1,0 +1,131 @@
+# 环境与密钥
+.env
+.env.local
+# 参赛信息.json 里是公网地址 + 演示账号密码，与 .env 同级，绝不能进版本库，
+# 也不能进交给评委的源码包（tools/build_source_zip.py 已同步拦截）。
+# 只保留 参赛信息.example.json 作为模板。
+参赛信息.json
+参赛信息-*.json
+参赛信息.*.json
+# 上一行的通配会把模板文件一起忽略掉，而它恰恰是唯一该进版本库的那份
+# （参赛者照着它填自己的信息）。必须紧跟在其后negate 才生效。
+!参赛信息.example.json
+
+# Python
+*.db
+# SQLite 的 WAL/SHM 旁路文件：splitext("x.db-wal") 得到 ".db-wal"，
+# 不在 *.db 的匹配范围内，而 WAL 里可能有已提交的数据行
+# （用户、密码哈希、聊天正文），漏掉它等于把数据库交出去。
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.pyo
+
+# Node / 前端
+node_modules/
+dist/
+*.log
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+
+# 本地 Redis 便携版（生产用 docker-compose 的 redis:7.4-alpine）
+redis/
+
+# 本地数据与上传产物
+#
+# 注意：backend/data/ 下有两类完全不同的东西，不能整体忽略 ——
+#   ① 运行时**必需**的数据：host_prior.json、knowledge/*.json
+#      这些是几十 KB 的配置文件，必须进版本库。
+#      之前整体忽略 backend/data/ 的直接后果：换一台机器 clone 后
+#      host_prior 相关 33 个测试全部跳过、RAG 测试直接失败，
+#      而 deploy/README.md 恰恰推荐用 git clone 部署。
+#   ② 本地产物：uploads/、results/、ultralytics 缓存 —— 只忽略这些。
+#
+# 为什么不能写成 `data/`：gitignore 的模式不含斜杠时匹配**任意层级**，
+# 于是 `data/` 会把backend/data/ 整个忽略掉，
+# 而 `git ls-files backend/data` 会返回 0 个文件 —— 克隆即缺文件，pytest 硬失败。
+# 所以改为显式点名，只忽略真正属于用户数据的产物目录。
+backend/data/uploads/
+backend/data/results/
+# 训练脚本的临时导出目录（模型试跑产物，可重建）
+backend/.pt_tmp/
+
+# 赛事官方来文与打包产物：本地周转用，不属于源码
+_赛事官方文件/
+参赛打包/
+# UI 改版的截图快照。目录规则带尾部斜杠，只匹配目录；
+# 实际磁盘上这三个是同名前缀的 .png 文件，必须单独点名。
+_new_ui_*/
+_new_ui_*.png
+
+# 各类手工备份文件（可能含库快照与个人数据）
+#
+# 注意 `*.bak` 单独一条是不够的：真实的库备份带时间戳后缀，
+# 文件名形如 pestguard.db.bak_20261005_120155，以 `_20261005_120155` 结尾，
+# 不以 `.bak` 结尾，所以必须再补一条 `*.bak_*` 才拦得住。
+# 这两个概念的两个出口要同时堵：
+#   git 侧（本文件）与备份脚本侧（tools/backup_project.py 的 EXCLUDE_DIRS）
+#   —— 只补一个，另一路照样把密钥与用户数据带走。
+*.bak
+*.bak_*
+# 数据库副本目录：内含 password_hash、聊天正文与上传记录
+backend/_backups/
+
+# 模型权重（太大不进 git）
+# 注意：这意味着 git clone 部署拿到的是**没有权重**的仓库。
+# deploy/README.md 与 deploy/setup.sh 都假定 model_weights/best.pt 存在
+# （setup.sh 第 30-35 行会直接报错退出），所以权重必须另外分发 ——
+# 提交给组委会的源码包（tools/build_source_zip.py）里是**包含**权重的。
+model_weights/*.pt
+model_weights/*.onnx
+
+# 视频/二进制样本
+*.mp4
+*.webm
+*.mov
+*.pdb
+*.zip
+
+# PPT 中间产物
+ppt/*.xml
+
+# 测试样本
+测试_*
+
+# 大体量图集：合计约 265 MB，属于素材而非源码，不必进版本库
+# （build_source_zip.py 也已排除，且前者含 CC BY-NC 禁商用图）
+_外部验证集/
+_队友交图_待检/
+_实测图集/
+
+# Python 打包产物
+*.egg-info/
+*.egg
+build/
+
+# Public source repository: local runtime, credentials and generated output
+output/
+.env.*
+!.env.example
+!**/.env.example
+*.sqlite
+*.sqlite3
+*.key
+*.pem
+*.pfx
+*.p12
+*.crt
+*.db-*
+*.sqlite-*
+deploy/hecha-server-*.md
+# The bundled 10 MB inference model is required for reproducible detection.
+!model_weights/best.pt

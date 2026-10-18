@@ -1,0 +1,44 @@
+# PestGuard API 服务单元（对应线上 /etc/systemd/system/pestguard.service）
+#
+# 安装：
+#   cp deploy/pestguard.service /etc/systemd/system/pestguard.service
+#   systemctl daemon-reload && systemctl enable --now pestguard
+#
+# 查看日志：journalctl -u pestguard -f
+#
+# 注意：不要把真实服务器地址写回这里 —— 本文件会随源码包交给评委。
+
+[Unit]
+Description=PestGuard API (FastAPI + YOLOv8)
+After=network.target redis.service
+Wants=redis.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/pestguard/backend
+# venv 里的 uvicorn。--workers 1：SQLite + 模型实例都是单份，多 worker 反而会争抢
+ExecStart=/opt/pestguard/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Environment=APP_ENV=production
+
+# 崩溃自动拉起：这是演示机的生命线，服务挂了没人值守也得自己站起来
+Restart=always
+RestartSec=3
+
+# 内存上限：YOLO + torch 峰值可能冲到 2G+，不限的话低配机会被拖死，
+# 整机 OOM 连 Redis 一起带走。到上限只杀本服务，RestartSec 后自动恢复。
+MemoryMax=2G
+MemoryHigh=1536M
+
+# 日志走 journald（默认），配 logrotate 由 journald 自身管理，
+# 这里限制单位日志量，防止长跑撑爆磁盘
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=2000
+
+# 安全加固：业务进程不需要任何特权
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

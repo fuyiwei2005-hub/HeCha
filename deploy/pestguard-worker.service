@@ -1,0 +1,34 @@
+# PestGuard 视频处理 Worker（ARQ）
+#
+# 没有它，视频任务会在 Redis 里永远排队，前端一直转圈。
+# 与 API 分开成独立单元：worker 崩了 API 还活着，反之亦然。
+#
+# 安装：
+#   cp deploy/pestguard-worker.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now pestguard-worker
+
+[Unit]
+Description=PestGuard Video Worker (ARQ)
+After=network.target redis.service pestguard.service
+Wants=redis.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/pestguard/backend
+ExecStart=/opt/pestguard/backend/.venv/bin/arq app.workers.video.WorkerSettings
+Environment=APP_ENV=production
+
+Restart=always
+RestartSec=3
+
+# 视频逐帧推理 + 重编码是内存大户，单任务上限与 API 相同
+MemoryMax=2G
+MemoryHigh=1536M
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,27 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+gunicorn==23.0.0
+sqlalchemy[asyncio]==2.0.43
+aiosqlite==0.21.0
+asyncpg==0.30.0
+alembic==1.16.5
+pydantic-settings==2.10.1
+email-validator==2.2.0
+python-multipart==0.0.20
+PyJWT==2.10.1
+pwdlib[argon2]==0.2.1
+redis[hiredis]==5.3.1
+arq==0.26.3
+pillow==11.3.0
+opencv-python-headless==4.12.0.88
+numpy==2.2.6
+openai>=1.55
+httpx==0.28.1
+# RAG 知识库检索：jieba 分词 + BM25 打分。
+# 这两个之前漏在清单外 —— 本机能跑（恰好装过），部署后 RAG 静默降级，
+# 服务器上「可溯源」整个特性其实从未生效过。教训：依赖清单以导入为准逐一核对。
+jieba==0.42.1
+rank-bm25==0.2.2
+imageio-ffmpeg>=0.4.9
+pytest==8.4.2
+pytest-asyncio==1.1.0

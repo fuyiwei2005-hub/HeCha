@@ -1,0 +1,19 @@
+<section data-pages="login" id="authCard" class="reveal" style="display:none">
+    <div class="auth-card">
+      <h3 class="serif">登录 / 注册开始使用</h3>
+      <form id="authForm">
+        <label>账号</label>
+        <input type="text" id="username" placeholder="3-32 位字母、数字或下划线"
+               autocomplete="username" required minlength="3" maxlength="32">
+        <label>密码（至少 6 位）</label>
+        <input type="password" id="password" placeholder="至少 6 位" autocomplete="current-password"
+               required minlength="6">
+        <div class="row">
+          <button type="submit" class="primary" id="loginBtn">登录</button>
+          <button type="button" class="ghost" id="regBtn">注册新账号</button>
+        </div>
+        <div class="auth-tip" id="authTip">还没有账号？点右边「注册新账号」即可，账号随便取，不用填邮箱。</div>
+      </form>
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+  </section>

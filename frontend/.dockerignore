@@ -1,0 +1,32 @@
+# Docker 构建上下文排除表（build context = ./frontend，见 docker-compose.yml 的 web 服务）
+#
+# 为什么必须有这个文件：frontend/Dockerfile 里是 `COPY . .`，
+# 没有 .dockerignore 时整个 frontend/ 会被打包发给 Docker daemon：
+#   ① 体积：node_modules 约 59.7 MB / 2452 个文件，纯属浪费；
+#   ② 正确性：更严重的是 `COPY . .` 会把宿主机的 node_modules 覆盖到
+#      镜像里刚 `npm ci` 装出来的 node_modules 上。跨平台的原生二进制
+#      （esbuild / rollup 的 .node）在两处不一致时会构建失败，
+#      而且报错信息指向 vite 内部，很难联想到是Dockerfile 的拷贝顺序问题。
+#
+# 锁文件与 package.json 必须留在上下文里：
+# Dockerfile 的 `COPY package*.json ./` 与 `npm ci` 都依赖它们。
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# 版本控制与编辑器
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# 本地日志与临时文件
+*.log
+npm-debug.log*
+.npm/
+
+# 容器编排与文档：不属于前端源码
+Dockerfile
+.dockerignore
+nginx.conf

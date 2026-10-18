@@ -1,0 +1,41 @@
+{
+  "hero.html": [
+    "home"
+  ],
+  "modules.html": [
+    "home"
+  ],
+  "infoPage.html": [
+    "contact",
+    "model",
+    "deployment"
+  ],
+  "authCard.html": [
+    "login"
+  ],
+  "console.html": [
+    "detect"
+  ],
+  "videoUpload.html": [
+    "video"
+  ],
+  "statistics.html": [
+    "statistics"
+  ],
+  "hero-7.html": [
+    "about"
+  ],
+  "history.html": [
+    "history",
+    "video"
+  ],
+  "feats.html": [
+    "features"
+  ],
+  "pipe.html": [
+    "about"
+  ],
+  "hero-11.html": [
+    "none"
+  ]
+}

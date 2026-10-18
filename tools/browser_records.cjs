@@ -1,0 +1,37 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const {spawn}=require('child_process');
+const {chromium}=require(process.env.PESTGUARD_PLAYWRIGHT_MODULE);
+const root=path.resolve(__dirname,'..'),out=path.join(root,'output','records-smoke'),base='http://127.0.0.1:18082';
+fs.mkdirSync(out,{recursive:true});const data=fs.mkdtempSync(path.join(out,'data-'));
+const python=path.join(root,'.venv','Scripts','python.exe'),pause=ms=>new Promise(r=>setTimeout(r,ms));
+function command(args){return new Promise((resolve,reject)=>{const process=spawn(python,args,{cwd:root,windowsHide:true,stdio:['ignore','pipe','pipe']});let output='';process.stdout.on('data',b=>output+=b);process.stderr.on('data',b=>output+=b);process.on('exit',code=>code===0?resolve(output):reject(Error(output)));});}
+(async()=>{
+ const log=fs.openSync(path.join(out,'server.log'),'w');const server=spawn(python,[path.join(root,'tools/smoke_full.py'),'18082'],{cwd:root,windowsHide:true,stdio:['ignore',log,log],env:{...process.env,PRODUCT_FRONTEND:'react',HECHA_SMOKE_DIR:data,HECHA_SMOKE_FRAME_DELAY:'.07',PYTHONIOENCODING:'utf-8'}});
+ let browser,page;const checks=[],errors=[];
+ try{
+  let ready=false;for(let i=0;i<150;i++){if(server.exitCode!==null)throw Error('server exited');try{if((await fetch(base+'/api/health')).ok){ready=true;break;}}catch{}await pause(200);}assert(ready);
+  browser=await chromium.launch({channel:'msedge',headless:true});page=await browser.newPage({viewport:{width:1440,height:1000}});page.on('pageerror',error=>errors.push(error.message));page.on('dialog',dialog=>dialog.accept());
+  await page.goto(base+'/login');await page.getByRole('button',{name:'没有账号？去注册'}).click();await page.locator('#username').fill('records_'+Date.now());await page.locator('#password').fill('Smoke-password-123');await page.getByRole('button',{name:'注册并登录',exact:true}).click();await page.locator('#modules').waitFor();
+  const user=await page.evaluate(async()=> (await fetch('/api/auth/me',{headers:{Authorization:'Bearer '+localStorage.getItem('token')}})).json());
+  const source=path.join(out,'source.mp4');await command(['-c',"import cv2,numpy as np,sys; w=cv2.VideoWriter(sys.argv[1],cv2.VideoWriter_fourcc(*'mp4v'),10,(64,64)); [w.write(np.zeros((64,64,3),dtype=np.uint8)) for _ in range(90)];w.release()",source]);
+  await command([path.join(root,'tools/seed_record_smoke.py'),data,String(user.id),source]);
+  await page.goto(base+'/history');await page.getByText('共 126 条记录 · 第 1 / 7 页',{exact:true}).waitFor();assert.equal(await page.locator('.detection').count(),20);checks.push('126 records use real server-side pages');
+  const first=await page.locator('.detection h3').first().innerText();await page.getByRole('button',{name:'下一页',exact:true}).click();await page.getByText('共 126 条记录 · 第 2 / 7 页',{exact:true}).waitFor();assert.notEqual(await page.locator('.detection h3').first().innerText(),first);const second=await page.locator('.detection h3').first().innerText();
+  await page.reload();await page.getByText('共 126 条记录 · 第 2 / 7 页',{exact:true}).waitFor();assert.equal(await page.locator('.detection h3').first().innerText(),second);checks.push('pagination and refresh preserve requested page');
+  await page.getByPlaceholder('文件名、作物或虫种').fill('田间旧记录_000');await page.getByRole('button',{name:'筛选',exact:true}).click();await page.getByText('共 1 条记录 · 第 1 / 1 页',{exact:true}).waitFor();assert.equal(await page.locator('.detection h3').first().innerText(),'田间旧记录_000.mp4');checks.push('keyword finds the oldest record beyond the first 100');
+  await page.getByPlaceholder('文件名、作物或虫种').fill('蚜虫');await page.getByRole('button',{name:'筛选',exact:true}).click();await page.getByText('共 125 条记录 · 第 1 / 7 页',{exact:true}).waitFor();checks.push('Chinese pest names search across all pages');
+  await page.getByRole('button',{name:'图片',exact:true}).click();await page.getByText('共 83 条记录 · 第 1 / 5 页',{exact:true}).waitFor();assert((await page.locator('.detection-meta').allInnerTexts()).every(text=>text.includes('图片')));checks.push('media filtering runs on the server');
+  await page.getByRole('button',{name:'重置筛选',exact:true}).click();await page.getByText('共 126 条记录 · 第 1 / 7 页',{exact:true}).waitFor();
+  await page.getByLabel('开始日期').fill('2026-01-02');await page.getByLabel('结束日期').fill('2026-01-02');await page.getByRole('button',{name:'筛选',exact:true}).click();await page.getByText('共 42 条记录 · 第 1 / 3 页',{exact:true}).waitFor();checks.push('date range includes the whole selected local day');
+  await page.getByRole('button',{name:'重置筛选',exact:true}).click();await page.getByLabel('任务状态').selectOption('failed');await page.getByRole('button',{name:'筛选',exact:true}).click();await page.getByText('共 1 条记录 · 第 1 / 1 页',{exact:true}).waitFor();await page.getByRole('button',{name:'重试视频',exact:true}).waitFor();checks.push('status filter exposes recoverable failed video');
+  await page.getByRole('button',{name:'重试视频',exact:true}).click();await page.getByLabel('任务状态').selectOption('');await page.getByPlaceholder('文件名、作物或虫种').fill('retry-source');await page.getByRole('button',{name:'筛选',exact:true}).click();await page.waitForFunction(()=>{const p=document.querySelector('.video-progress progress');return p&&p.value>0&&p.value<100;},{},{timeout:25000});
+  await page.screenshot({path:path.join(out,'video-progress.png'),fullPage:true,animations:'disabled'});checks.push('retry resumes retained video and publishes frame progress');
+  await page.reload();await page.getByRole('button',{name:/查看 .* 个检出时间点/}).waitFor({timeout:30000});checks.push('task finishes after leaving filtered page and refreshing');
+  await page.getByPlaceholder('文件名、作物或虫种').fill('nothing-matches');await page.getByRole('button',{name:'筛选',exact:true}).click();await page.getByText('暂无符合条件的检测记录',{exact:true}).waitFor();checks.push('empty search has a clear result state');
+  await page.getByRole('button',{name:'重置筛选',exact:true}).click();await page.getByRole('button',{name:'下一页',exact:true}).waitFor({state:'visible'});await page.getByRole('button',{name:'下一页',exact:true}).click();await page.getByText('共 126 条记录 · 第 2 / 7 页',{exact:true}).waitFor();await page.goBack();await page.getByText('共 126 条记录 · 第 1 / 7 页',{exact:true}).waitFor();checks.push('browser history restores filter/page URL state');
+  await page.setViewportSize({width:390,height:844});await page.screenshot({path:path.join(out,'history-mobile.png'),fullPage:false,animations:'disabled'});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));checks.push('search and pagination fit mobile screen');
+  await page.goto(base+'/history?q=田间旧记录_000');await page.getByText('共 1 条记录 · 第 1 / 1 页',{exact:true}).waitFor();await page.getByRole('button',{name:'删除这条记录'}).click();await page.getByText('暂无符合条件的检测记录',{exact:true}).waitFor();checks.push('deleting the only filtered record updates count and empty state');
+  assert.deepEqual(errors,[]);checks.push('no browser errors');fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({checks,errors,synthetic:true},null,2));console.log('PASS '+checks.length+' history/progress browser checks');
+ }catch(error){if(page)await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,animations:'disabled'}).catch(()=>{});fs.writeFileSync(path.join(out,'failure.json'),JSON.stringify({checks,errors,error:String(error)},null,2));throw error;}
+ finally{if(browser)await browser.close();server.kill();fs.closeSync(log);}
+})().catch(error=>{console.error(error);process.exitCode=1;});

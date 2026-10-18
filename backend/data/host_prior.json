@@ -1,0 +1,1526 @@
+{
+  "meta": {
+    "version": "1.0",
+    "generated_by": "backend/tools/build_host_prior.py",
+    "source": "backend/data/knowledge/*.json → tags 字段",
+    "model_classes": 46,
+    "covered": 46,
+    "missing_model_classes": [],
+    "non_model_kb_pests": [],
+    "pests_without_host_tag": [
+      "侧多食跗线螨",
+      "叶蝉",
+      "大青叶蝉",
+      "小地老虎",
+      "斑蝥",
+      "斜纹夜蛾",
+      "白星花金龟",
+      "盲蝽",
+      "红蜘蛛",
+      "蓟马",
+      "蚜虫",
+      "蛴螬",
+      "蝗虫",
+      "蝼蛄",
+      "金针虫"
+    ]
+  },
+  "scoring": {
+    "alpha_strong": 0.35,
+    "alpha_related": 0.18,
+    "alpha_conflict": -0.25,
+    "floor": 0.5,
+    "note": "new_score = old_score * (1 + alpha)。alpha 为启发式初值，必须用 tools/eval_top1.py 的评测结果校准后才能写进设计文档。floor 保证最坏情况下某候选权重不低于原值的一半，宁可不提升也不允许漏检 —— 植保场景漏报代价远高于误报。"
+  },
+  "crops": [
+    {
+      "key": "向日葵",
+      "label": "向日葵",
+      "aliases": [],
+      "region": "常见作物",
+      "has_prior": false,
+      "strong": [],
+      "related": []
+    },
+    {
+      "key": "大豆",
+      "label": "大豆",
+      "aliases": [
+        "黄豆"
+      ],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "豆芫菁"
+      ],
+      "related": []
+    },
+    {
+      "key": "大麦",
+      "label": "大麦",
+      "aliases": [],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "小麦管蓟马",
+        "长腿红蜘蛛",
+        "麦叶蜂",
+        "麦圆叶爪螨"
+      ],
+      "related": []
+    },
+    {
+      "key": "小麦",
+      "label": "小麦",
+      "aliases": [
+        "麦子"
+      ],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "小麦管蓟马",
+        "长腿红蜘蛛",
+        "麦叶蜂",
+        "麦圆叶爪螨"
+      ],
+      "related": []
+    },
+    {
+      "key": "山楂",
+      "label": "山楂",
+      "aliases": [],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "李",
+      "label": "李子",
+      "aliases": [
+        "李子",
+        "李树"
+      ],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "杏",
+      "label": "杏子",
+      "aliases": [
+        "杏子",
+        "杏树"
+      ],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "板栗",
+      "label": "板栗",
+      "aliases": [],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "枣",
+      "label": "枣树",
+      "aliases": [
+        "大枣",
+        "枣子",
+        "红枣"
+      ],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "柑橘",
+      "label": "柑橘",
+      "aliases": [
+        "桔子",
+        "橘子"
+      ],
+      "region": "南方主栽（华北温室偶见）",
+      "has_prior": true,
+      "strong": [
+        "吹绵蚧",
+        "柑橘潜叶蛾",
+        "柑橘锈螨",
+        "橘小实蝇",
+        "矢尖蚧",
+        "红蜡蚧",
+        "黑点蚧"
+      ],
+      "related": []
+    },
+    {
+      "key": "柚",
+      "label": "柚子",
+      "aliases": [
+        "柚子",
+        "柚子树"
+      ],
+      "region": "南方主栽（华北温室偶见）",
+      "has_prior": true,
+      "strong": [
+        "吹绵蚧",
+        "柑橘潜叶蛾",
+        "柑橘锈螨",
+        "橘小实蝇",
+        "矢尖蚧",
+        "红蜡蚧",
+        "黑点蚧"
+      ],
+      "related": []
+    },
+    {
+      "key": "柠檬",
+      "label": "柠檬",
+      "aliases": [],
+      "region": "南方主栽（华北温室偶见）",
+      "has_prior": true,
+      "strong": [
+        "吹绵蚧",
+        "柑橘潜叶蛾",
+        "柑橘锈螨",
+        "橘小实蝇",
+        "矢尖蚧",
+        "红蜡蚧",
+        "黑点蚧"
+      ],
+      "related": []
+    },
+    {
+      "key": "柿",
+      "label": "柿子",
+      "aliases": [
+        "柿子",
+        "柿子树",
+        "柿树"
+      ],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "核桃",
+      "label": "核桃",
+      "aliases": [],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "桃",
+      "label": "桃子",
+      "aliases": [
+        "桃子",
+        "桃树"
+      ],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "梨",
+      "label": "梨树",
+      "aliases": [
+        "梨子"
+      ],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "棉花",
+      "label": "棉花",
+      "aliases": [],
+      "region": "常见作物",
+      "has_prior": false,
+      "strong": [],
+      "related": []
+    },
+    {
+      "key": "樱桃",
+      "label": "樱桃",
+      "aliases": [],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "橙",
+      "label": "橙子",
+      "aliases": [
+        "橙子"
+      ],
+      "region": "南方主栽（华北温室偶见）",
+      "has_prior": true,
+      "strong": [
+        "吹绵蚧",
+        "柑橘潜叶蛾",
+        "柑橘锈螨",
+        "橘小实蝇",
+        "矢尖蚧",
+        "红蜡蚧",
+        "黑点蚧"
+      ],
+      "related": []
+    },
+    {
+      "key": "水稻",
+      "label": "水稻",
+      "aliases": [
+        "稻子",
+        "稻谷"
+      ],
+      "region": "南方及东北主栽",
+      "has_prior": true,
+      "strong": [
+        "稻水象甲",
+        "稻瘿蚊",
+        "稻纵卷叶螟"
+      ],
+      "related": []
+    },
+    {
+      "key": "油菜",
+      "label": "油菜",
+      "aliases": [],
+      "region": "全国",
+      "has_prior": true,
+      "strong": [
+        "黄曲条跳甲"
+      ],
+      "related": []
+    },
+    {
+      "key": "燕麦",
+      "label": "燕麦",
+      "aliases": [],
+      "region": "麦类·华北主栽",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "小麦管蓟马",
+        "长腿红蜘蛛",
+        "麦叶蜂",
+        "麦圆叶爪螨"
+      ]
+    },
+    {
+      "key": "猕猴桃",
+      "label": "猕猴桃",
+      "aliases": [],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "玉米",
+      "label": "玉米",
+      "aliases": [
+        "苞米",
+        "苞谷"
+      ],
+      "region": "全国，华北主栽",
+      "has_prior": true,
+      "strong": [
+        "玉米螟"
+      ],
+      "related": []
+    },
+    {
+      "key": "甘蓝",
+      "label": "甘蓝",
+      "aliases": [
+        "包菜",
+        "卷心菜",
+        "圆白菜"
+      ],
+      "region": "全国",
+      "has_prior": true,
+      "strong": [
+        "黄曲条跳甲"
+      ],
+      "related": []
+    },
+    {
+      "key": "甜菜",
+      "label": "甜菜",
+      "aliases": [],
+      "region": "华北（甜菜）主栽",
+      "has_prior": true,
+      "strong": [
+        "甜菜潜叶蝇"
+      ],
+      "related": []
+    },
+    {
+      "key": "番茄",
+      "label": "番茄",
+      "aliases": [
+        "圣女果",
+        "西红柿"
+      ],
+      "region": "常见作物",
+      "has_prior": false,
+      "strong": [],
+      "related": []
+    },
+    {
+      "key": "白菜",
+      "label": "白菜",
+      "aliases": [],
+      "region": "全国",
+      "has_prior": true,
+      "strong": [
+        "黄曲条跳甲"
+      ],
+      "related": []
+    },
+    {
+      "key": "石榴",
+      "label": "石榴",
+      "aliases": [],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "绿豆",
+      "label": "绿豆",
+      "aliases": [],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "豆芫菁"
+      ],
+      "related": []
+    },
+    {
+      "key": "芥菜",
+      "label": "芥菜",
+      "aliases": [],
+      "region": "全国",
+      "has_prior": true,
+      "strong": [
+        "黄曲条跳甲"
+      ],
+      "related": []
+    },
+    {
+      "key": "花椰菜",
+      "label": "花椰菜",
+      "aliases": [],
+      "region": "全国",
+      "has_prior": true,
+      "strong": [
+        "黄曲条跳甲"
+      ],
+      "related": []
+    },
+    {
+      "key": "花生",
+      "label": "花生",
+      "aliases": [],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "豆芫菁"
+      ],
+      "related": []
+    },
+    {
+      "key": "苜蓿",
+      "label": "苜蓿",
+      "aliases": [],
+      "region": "豆类作物·华北主栽",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "豆芫菁"
+      ]
+    },
+    {
+      "key": "苹果",
+      "label": "苹果",
+      "aliases": [],
+      "region": "果树（泛）·全国",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "康氏粉蚧",
+        "斑衣蜡蝉",
+        "枯叶夜蛾",
+        "桃蛀螟",
+        "白蛾蜡蝉",
+        "皱胸天牛",
+        "褐缘蛾蜡蝉"
+      ]
+    },
+    {
+      "key": "草莓",
+      "label": "草莓",
+      "aliases": [],
+      "region": "常见作物",
+      "has_prior": false,
+      "strong": [],
+      "related": []
+    },
+    {
+      "key": "菜豆",
+      "label": "菜豆",
+      "aliases": [],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "豆芫菁"
+      ],
+      "related": []
+    },
+    {
+      "key": "菠菜",
+      "label": "菠菜",
+      "aliases": [],
+      "region": "藜科作物·华北（甜菜）主栽",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "甜菜潜叶蝇"
+      ]
+    },
+    {
+      "key": "萝卜",
+      "label": "萝卜",
+      "aliases": [],
+      "region": "全国",
+      "has_prior": true,
+      "strong": [
+        "黄曲条跳甲"
+      ],
+      "related": []
+    },
+    {
+      "key": "葡萄",
+      "label": "葡萄",
+      "aliases": [],
+      "region": "全国，华北优势产区",
+      "has_prior": true,
+      "strong": [
+        "十星瓢萤叶甲",
+        "葡萄天蛾",
+        "葡萄根瘤蚜",
+        "葡萄瘿螨",
+        "葡萄虎天牛",
+        "葡萄透翅蛾"
+      ],
+      "related": []
+    },
+    {
+      "key": "豇豆",
+      "label": "豇豆",
+      "aliases": [],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "豆芫菁"
+      ],
+      "related": []
+    },
+    {
+      "key": "豌豆",
+      "label": "豌豆",
+      "aliases": [],
+      "region": "华北主栽",
+      "has_prior": true,
+      "strong": [
+        "豆芫菁"
+      ],
+      "related": []
+    },
+    {
+      "key": "辣椒",
+      "label": "辣椒",
+      "aliases": [
+        "尖椒",
+        "青椒"
+      ],
+      "region": "常见作物",
+      "has_prior": false,
+      "strong": [],
+      "related": []
+    },
+    {
+      "key": "青稞",
+      "label": "青稞",
+      "aliases": [],
+      "region": "麦类·华北主栽",
+      "has_prior": true,
+      "strong": [],
+      "related": [
+        "小麦管蓟马",
+        "长腿红蜘蛛",
+        "麦叶蜂",
+        "麦圆叶爪螨"
+      ]
+    },
+    {
+      "key": "马铃薯",
+      "label": "马铃薯",
+      "aliases": [
+        "土豆",
+        "洋芋"
+      ],
+      "region": "常见作物",
+      "has_prior": false,
+      "strong": [],
+      "related": []
+    },
+    {
+      "key": "黄瓜",
+      "label": "黄瓜",
+      "aliases": [],
+      "region": "常见作物",
+      "has_prior": false,
+      "strong": [],
+      "related": []
+    }
+  ],
+  "pests": {
+    "稻纵卷叶螟": {
+      "class_en": "rice leaf roller",
+      "kb_id": "pest-001",
+      "generality": "specific",
+      "host_tags": [
+        "水稻"
+      ],
+      "host_labels": [
+        "水稻"
+      ],
+      "hosts": [
+        "水稻"
+      ],
+      "broad": false
+    },
+    "稻瘿蚊": {
+      "class_en": "rice gall midge",
+      "kb_id": "pest-002",
+      "generality": "specific",
+      "host_tags": [
+        "水稻"
+      ],
+      "host_labels": [
+        "水稻"
+      ],
+      "hosts": [
+        "水稻"
+      ],
+      "broad": false
+    },
+    "稻水象甲": {
+      "class_en": "rice water weevil",
+      "kb_id": "pest-003",
+      "generality": "specific",
+      "host_tags": [
+        "水稻"
+      ],
+      "host_labels": [
+        "水稻"
+      ],
+      "hosts": [
+        "水稻"
+      ],
+      "broad": false
+    },
+    "蛴螬": {
+      "class_en": "grub",
+      "kb_id": "pest-004",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "蝼蛄": {
+      "class_en": "mole cricket",
+      "kb_id": "pest-005",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "金针虫": {
+      "class_en": "wireworm",
+      "kb_id": "pest-006",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "小地老虎": {
+      "class_en": "black cutworm",
+      "kb_id": "pest-007",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "红蜘蛛": {
+      "class_en": "red spider",
+      "kb_id": "pest-008",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "玉米螟": {
+      "class_en": "corn borer",
+      "kb_id": "pest-009",
+      "generality": "specific",
+      "host_tags": [
+        "玉米"
+      ],
+      "host_labels": [
+        "玉米"
+      ],
+      "hosts": [
+        "玉米"
+      ],
+      "broad": false
+    },
+    "蚜虫": {
+      "class_en": "aphids",
+      "kb_id": "pest-010",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "白星花金龟": {
+      "class_en": "Potosiabre vitarsis",
+      "kb_id": "pest-011",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "桃蛀螟": {
+      "class_en": "peach borer",
+      "kb_id": "pest-012",
+      "generality": "specific",
+      "host_tags": [
+        "果树"
+      ],
+      "host_labels": [
+        "果树（泛）"
+      ],
+      "hosts": [
+        "山楂",
+        "李",
+        "杏",
+        "板栗",
+        "枣",
+        "柿",
+        "核桃",
+        "桃",
+        "梨",
+        "樱桃",
+        "猕猴桃",
+        "石榴",
+        "苹果"
+      ],
+      "broad": false
+    },
+    "麦圆叶爪螨": {
+      "class_en": "penthaleus major",
+      "kb_id": "pest-013",
+      "generality": "family",
+      "host_tags": [
+        "麦类"
+      ],
+      "host_labels": [
+        "麦类"
+      ],
+      "hosts": [
+        "大麦",
+        "小麦",
+        "燕麦",
+        "青稞"
+      ],
+      "broad": false
+    },
+    "长腿红蜘蛛": {
+      "class_en": "longlegged spider mite",
+      "kb_id": "pest-014",
+      "generality": "family",
+      "host_tags": [
+        "麦类"
+      ],
+      "host_labels": [
+        "麦类"
+      ],
+      "hosts": [
+        "大麦",
+        "小麦",
+        "燕麦",
+        "青稞"
+      ],
+      "broad": false
+    },
+    "小麦管蓟马": {
+      "class_en": "wheat phloeothrips",
+      "kb_id": "pest-015",
+      "generality": "family",
+      "host_tags": [
+        "麦类"
+      ],
+      "host_labels": [
+        "麦类"
+      ],
+      "hosts": [
+        "大麦",
+        "小麦",
+        "燕麦",
+        "青稞"
+      ],
+      "broad": false
+    },
+    "麦叶蜂": {
+      "class_en": "wheat sawfly",
+      "kb_id": "pest-016",
+      "generality": "family",
+      "host_tags": [
+        "麦类"
+      ],
+      "host_labels": [
+        "麦类"
+      ],
+      "hosts": [
+        "大麦",
+        "小麦",
+        "燕麦",
+        "青稞"
+      ],
+      "broad": false
+    },
+    "甜菜潜叶蝇": {
+      "class_en": "beet fly",
+      "kb_id": "pest-017",
+      "generality": "specific",
+      "host_tags": [
+        "藜科"
+      ],
+      "host_labels": [
+        "藜科作物"
+      ],
+      "hosts": [
+        "甜菜",
+        "菠菜"
+      ],
+      "broad": false
+    },
+    "黄曲条跳甲": {
+      "class_en": "flea beetle",
+      "kb_id": "pest-018",
+      "generality": "family",
+      "host_tags": [
+        "十字花科"
+      ],
+      "host_labels": [
+        "十字花科蔬菜"
+      ],
+      "hosts": [
+        "油菜",
+        "甘蓝",
+        "白菜",
+        "芥菜",
+        "花椰菜",
+        "萝卜"
+      ],
+      "broad": false
+    },
+    "蝗虫": {
+      "class_en": "Locustoidea",
+      "kb_id": "pest-019",
+      "generality": "unknown",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": false
+    },
+    "豆芫菁": {
+      "class_en": "legume blister beetle",
+      "kb_id": "pest-020",
+      "generality": "family",
+      "host_tags": [
+        "豆类"
+      ],
+      "host_labels": [
+        "豆类作物"
+      ],
+      "hosts": [
+        "大豆",
+        "绿豆",
+        "花生",
+        "苜蓿",
+        "菜豆",
+        "豇豆",
+        "豌豆"
+      ],
+      "broad": false
+    },
+    "斑蝥": {
+      "class_en": "blister beetle",
+      "kb_id": "pest-021",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "蓟马": {
+      "class_en": "Thrips",
+      "kb_id": "pest-022",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "葡萄根瘤蚜": {
+      "class_en": "Viteus vitifoliae",
+      "kb_id": "pest-023",
+      "generality": "specific",
+      "host_tags": [
+        "葡萄"
+      ],
+      "host_labels": [
+        "葡萄"
+      ],
+      "hosts": [
+        "葡萄"
+      ],
+      "broad": false
+    },
+    "葡萄瘿螨": {
+      "class_en": "Colomerus vitis",
+      "kb_id": "pest-024",
+      "generality": "specific",
+      "host_tags": [
+        "葡萄"
+      ],
+      "host_labels": [
+        "葡萄"
+      ],
+      "hosts": [
+        "葡萄"
+      ],
+      "broad": false
+    },
+    "十星瓢萤叶甲": {
+      "class_en": "oides decempunctata",
+      "kb_id": "pest-025",
+      "generality": "specific",
+      "host_tags": [
+        "葡萄"
+      ],
+      "host_labels": [
+        "葡萄"
+      ],
+      "hosts": [
+        "葡萄"
+      ],
+      "broad": false
+    },
+    "侧多食跗线螨": {
+      "class_en": "Polyphagotars onemus latus",
+      "kb_id": "pest-026",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "康氏粉蚧": {
+      "class_en": "Pseudococcus comstocki Kuwana",
+      "kb_id": "pest-027",
+      "generality": "specific",
+      "host_tags": [
+        "果树"
+      ],
+      "host_labels": [
+        "果树（泛）"
+      ],
+      "hosts": [
+        "山楂",
+        "李",
+        "杏",
+        "板栗",
+        "枣",
+        "柿",
+        "核桃",
+        "桃",
+        "梨",
+        "樱桃",
+        "猕猴桃",
+        "石榴",
+        "苹果"
+      ],
+      "broad": false
+    },
+    "葡萄透翅蛾": {
+      "class_en": "parathrene regalis",
+      "kb_id": "pest-028",
+      "generality": "specific",
+      "host_tags": [
+        "葡萄"
+      ],
+      "host_labels": [
+        "葡萄"
+      ],
+      "hosts": [
+        "葡萄"
+      ],
+      "broad": false
+    },
+    "葡萄天蛾": {
+      "class_en": "Ampelophaga",
+      "kb_id": "pest-029",
+      "generality": "specific",
+      "host_tags": [
+        "葡萄"
+      ],
+      "host_labels": [
+        "葡萄"
+      ],
+      "hosts": [
+        "葡萄"
+      ],
+      "broad": false
+    },
+    "斑衣蜡蝉": {
+      "class_en": "Lycorma delicatula",
+      "kb_id": "pest-030",
+      "generality": "specific",
+      "host_tags": [
+        "果树"
+      ],
+      "host_labels": [
+        "果树（泛）"
+      ],
+      "hosts": [
+        "山楂",
+        "李",
+        "杏",
+        "板栗",
+        "枣",
+        "柿",
+        "核桃",
+        "桃",
+        "梨",
+        "樱桃",
+        "猕猴桃",
+        "石榴",
+        "苹果"
+      ],
+      "broad": false
+    },
+    "葡萄虎天牛": {
+      "class_en": "Xylotrechus",
+      "kb_id": "pest-031",
+      "generality": "specific",
+      "host_tags": [
+        "葡萄"
+      ],
+      "host_labels": [
+        "葡萄"
+      ],
+      "hosts": [
+        "葡萄"
+      ],
+      "broad": false
+    },
+    "大青叶蝉": {
+      "class_en": "Cicadella viridis",
+      "kb_id": "pest-032",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "盲蝽": {
+      "class_en": "Miridae",
+      "kb_id": "pest-033",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "柑橘锈螨": {
+      "class_en": "Phyllocoptes oleiverus ashmead",
+      "kb_id": "pest-034",
+      "generality": "family",
+      "host_tags": [
+        "柑橘"
+      ],
+      "host_labels": [
+        "柑橘类"
+      ],
+      "hosts": [
+        "柑橘",
+        "柚",
+        "柠檬",
+        "橙"
+      ],
+      "broad": false
+    },
+    "吹绵蚧": {
+      "class_en": "Icerya purchasi Maskell",
+      "kb_id": "pest-035",
+      "generality": "family",
+      "host_tags": [
+        "柑橘"
+      ],
+      "host_labels": [
+        "柑橘类"
+      ],
+      "hosts": [
+        "柑橘",
+        "柚",
+        "柠檬",
+        "橙"
+      ],
+      "broad": false
+    },
+    "矢尖蚧": {
+      "class_en": "Unaspis yanonensis",
+      "kb_id": "pest-036",
+      "generality": "family",
+      "host_tags": [
+        "柑橘"
+      ],
+      "host_labels": [
+        "柑橘类"
+      ],
+      "hosts": [
+        "柑橘",
+        "柚",
+        "柠檬",
+        "橙"
+      ],
+      "broad": false
+    },
+    "红蜡蚧": {
+      "class_en": "Ceroplastes rubens",
+      "kb_id": "pest-037",
+      "generality": "family",
+      "host_tags": [
+        "柑橘"
+      ],
+      "host_labels": [
+        "柑橘类"
+      ],
+      "hosts": [
+        "柑橘",
+        "柚",
+        "柠檬",
+        "橙"
+      ],
+      "broad": false
+    },
+    "黑点蚧": {
+      "class_en": "Parlatoria zizyphus Lucus",
+      "kb_id": "pest-038",
+      "generality": "family",
+      "host_tags": [
+        "柑橘"
+      ],
+      "host_labels": [
+        "柑橘类"
+      ],
+      "hosts": [
+        "柑橘",
+        "柚",
+        "柠檬",
+        "橙"
+      ],
+      "broad": false
+    },
+    "橘小实蝇": {
+      "class_en": "Dacus dorsalis(Hendel)",
+      "kb_id": "pest-039",
+      "generality": "family",
+      "host_tags": [
+        "柑橘"
+      ],
+      "host_labels": [
+        "柑橘类"
+      ],
+      "hosts": [
+        "柑橘",
+        "柚",
+        "柠檬",
+        "橙"
+      ],
+      "broad": false
+    },
+    "斜纹夜蛾": {
+      "class_en": "Prodenia litura",
+      "kb_id": "pest-040",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    },
+    "枯叶夜蛾": {
+      "class_en": "Adristyrannus",
+      "kb_id": "pest-041",
+      "generality": "specific",
+      "host_tags": [
+        "果树"
+      ],
+      "host_labels": [
+        "果树（泛）"
+      ],
+      "hosts": [
+        "山楂",
+        "李",
+        "杏",
+        "板栗",
+        "枣",
+        "柿",
+        "核桃",
+        "桃",
+        "梨",
+        "樱桃",
+        "猕猴桃",
+        "石榴",
+        "苹果"
+      ],
+      "broad": false
+    },
+    "柑橘潜叶蛾": {
+      "class_en": "Phyllocnistis citrella Stainton",
+      "kb_id": "pest-042",
+      "generality": "family",
+      "host_tags": [
+        "柑橘"
+      ],
+      "host_labels": [
+        "柑橘类"
+      ],
+      "hosts": [
+        "柑橘",
+        "柚",
+        "柠檬",
+        "橙"
+      ],
+      "broad": false
+    },
+    "白蛾蜡蝉": {
+      "class_en": "Lawana imitata Melichar",
+      "kb_id": "pest-043",
+      "generality": "specific",
+      "host_tags": [
+        "果树"
+      ],
+      "host_labels": [
+        "果树（泛）"
+      ],
+      "hosts": [
+        "山楂",
+        "李",
+        "杏",
+        "板栗",
+        "枣",
+        "柿",
+        "核桃",
+        "桃",
+        "梨",
+        "樱桃",
+        "猕猴桃",
+        "石榴",
+        "苹果"
+      ],
+      "broad": false
+    },
+    "褐缘蛾蜡蝉": {
+      "class_en": "Salurnis marginella Guerr",
+      "kb_id": "pest-044",
+      "generality": "specific",
+      "host_tags": [
+        "果树"
+      ],
+      "host_labels": [
+        "果树（泛）"
+      ],
+      "hosts": [
+        "山楂",
+        "李",
+        "杏",
+        "板栗",
+        "枣",
+        "柿",
+        "核桃",
+        "桃",
+        "梨",
+        "樱桃",
+        "猕猴桃",
+        "石榴",
+        "苹果"
+      ],
+      "broad": false
+    },
+    "皱胸天牛": {
+      "class_en": "Rhytidodera bowrinii white",
+      "kb_id": "pest-045",
+      "generality": "specific",
+      "host_tags": [
+        "果树"
+      ],
+      "host_labels": [
+        "果树（泛）"
+      ],
+      "hosts": [
+        "山楂",
+        "李",
+        "杏",
+        "板栗",
+        "枣",
+        "柿",
+        "核桃",
+        "桃",
+        "梨",
+        "樱桃",
+        "猕猴桃",
+        "石榴",
+        "苹果"
+      ],
+      "broad": false
+    },
+    "叶蝉": {
+      "class_en": "Cicadellidae",
+      "kb_id": "pest-046",
+      "generality": "broad",
+      "host_tags": [],
+      "host_labels": [],
+      "hosts": [],
+      "broad": true
+    }
+  },
+  "host_tag_meta": {
+    "水稻": {
+      "label": "水稻",
+      "region": "南方及东北主栽",
+      "members": [
+        "水稻"
+      ]
+    },
+    "玉米": {
+      "label": "玉米",
+      "region": "全国，华北主栽",
+      "members": [
+        "玉米"
+      ]
+    },
+    "麦类": {
+      "label": "麦类",
+      "region": "华北主栽",
+      "members": [
+        "小麦",
+        "大麦",
+        "燕麦",
+        "青稞"
+      ]
+    },
+    "葡萄": {
+      "label": "葡萄",
+      "region": "全国，华北优势产区",
+      "members": [
+        "葡萄"
+      ]
+    },
+    "柑橘": {
+      "label": "柑橘类",
+      "region": "南方主栽（华北温室偶见）",
+      "members": [
+        "柑橘",
+        "橙",
+        "柚",
+        "柠檬"
+      ]
+    },
+    "藜科": {
+      "label": "藜科作物",
+      "region": "华北（甜菜）主栽",
+      "members": [
+        "甜菜",
+        "菠菜"
+      ]
+    },
+    "十字花科": {
+      "label": "十字花科蔬菜",
+      "region": "全国",
+      "members": [
+        "白菜",
+        "甘蓝",
+        "油菜",
+        "萝卜",
+        "花椰菜",
+        "芥菜"
+      ]
+    },
+    "豆类": {
+      "label": "豆类作物",
+      "region": "华北主栽",
+      "members": [
+        "大豆",
+        "花生",
+        "绿豆",
+        "豇豆",
+        "菜豆",
+        "豌豆",
+        "苜蓿"
+      ]
+    },
+    "果树": {
+      "label": "果树（泛）",
+      "region": "全国",
+      "members": [
+        "苹果",
+        "梨",
+        "桃",
+        "李",
+        "杏",
+        "柿",
+        "枣",
+        "山楂",
+        "石榴",
+        "猕猴桃",
+        "樱桃",
+        "核桃",
+        "板栗"
+      ]
+    }
+  }
+}
