@@ -5,7 +5,15 @@ import { Icon } from './Icon'
 import { FieldPest } from './FieldPest'
 
 const ivyLeaf='M-112 28 Q-91 3-111-25 L-136-62 L-77-60 Q-66-66-65-77 L-72-112 L-16-87 Q-7-83 3-94 L36-139 L64-84 Q70-69 85-68 L145-59 L111-16 Q100-2 114 9 L139 38 L81 50 Q68 53 67 70 L65 91 L14 67 Q-2 60-13 72 L-44 92 L-50 57 Q-53 42-68 44 L-112 51Z'
-const braidSegments=Array.from({length:42},(_,j)=>[0,1,2].sort((a,b)=>Math.cos(j/42*24+a*Math.PI*2/3)-Math.cos(j/42*24+b*Math.PI*2/3)).map(k=>({j,k}))).flat()
+const treeBranches:{d:string,width:number,start:number,x:number,y:number}[]=[]
+function growBranch(x:number,y:number,length:number,angle:number,depth:number,seed:number){
+ const endX=x+Math.cos(angle)*length,endY=y+Math.sin(angle)*length
+ treeBranches.push({d:`M${x} ${y} Q${x+Math.cos(angle+.12)*length*.48} ${y+Math.sin(angle+.12)*length*.48} ${endX} ${endY}`,width:Math.max(1.1,depth*depth*1.35),start:(5-depth)*.07,x:endX,y:endY})
+ if(depth>0){growBranch(endX,endY,length*(.68+Math.sin(seed)*.035),angle-.43,depth-1,seed+1);growBranch(endX,endY,length*(.7+Math.cos(seed)*.025),angle+.48,depth-1,seed+3)}
+}
+growBranch(550,732,206,-Math.PI/2,5,2)
+const treeFoliage=treeBranches.filter(b=>b.width<7).flatMap((b,i)=>Array.from({length:3},(_,j)=>({x:b.x+Math.sin(i*2.3+j*3)*23,y:b.y+Math.cos(i*1.7+j*2)*19,rotation:Math.sin(i*3+j)*125,size:.12+(i%4)*.018,start:.28+(i%13)*.016})))
+const mix=(a:number[],b:number[],t:number)=>`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*clamp(t))).join(',')})`
 const pests=['蚜虫','稻飞虱','棉铃虫','白粉虱','蝗虫','蓟马']
 const features=modules.slice(1,7).map(([path,label,description],index)=>({path,label,description,pest:pests[index]}))
 const clamp=(value:number,min=0,max=1)=>Math.max(min,Math.min(max,value))
@@ -15,10 +23,8 @@ function normalAt(t:number,p:number){const dx=650+270.6*Math.cos(t*8.2+p*1.35),l
 
 export function VineWorkspace(){
  const id=useId().replace(/:/g,'')
- const root=useRef<HTMLElement>(null),stem=useRef<SVGPathElement>(null),crest=useRef<SVGPathElement>(null),shade=useRef<SVGPathElement>(null)
- const braid=useRef<(SVGGElement|null)[]>([]),foliage=useRef<(SVGGElement|null)[]>([])
- const twines=useRef<(SVGPathElement|null)[]>([]),tendrils=useRef<(SVGPathElement|null)[]>([]),buds=useRef<(SVGGElement|null)[]>([]),pending=useRef<number|null>(null)
- const grains=useRef<(SVGPathElement|null)[]>([]),branches=useRef<(SVGPathElement|null)[]>([]),leaves=useRef<(SVGGElement|null)[]>([]),line=useRef<SVGPathElement>(null),progress=useRef<HTMLSpanElement>(null)
+ const root=useRef<HTMLElement>(null),treePaths=useRef<(SVGPathElement|null)[]>([]),foliage=useRef<(SVGGElement|null)[]>([]),season=useRef<HTMLSpanElement>(null),pending=useRef<number|null>(null)
+ const leaves=useRef<(SVGGElement|null)[]>([]),progress=useRef<HTMLSpanElement>(null)
  const panel=useRef<HTMLElement>(null),activeRef=useRef<number|null>(null),paintRef=useRef<()=>void>(()=>{})
  const [active,setActive]=useState<number|null>(null)
  activeRef.current=active
@@ -30,7 +36,7 @@ export function VineWorkspace(){
   if(el.dataset.motion==='scroll'){
    pending.current=index
    const header=innerWidth<=620?76:88,rect=el.getBoundingClientRect(),top=rect.top+scrollY-header,range=Math.max(1,el.offsetHeight-innerHeight+header)
-   window.scrollTo({top:top+range*clamp(.25+index*.135),behavior:'smooth'});paintRef.current()
+   window.scrollTo({top:top+range*clamp(.91+index*.014),behavior:'smooth'});paintRef.current()
   }else choose(index)
  }
  useEffect(()=>{
@@ -38,37 +44,23 @@ export function VineWorkspace(){
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),short=matchMedia('(max-height: 560px)')
   let frame=0,last=0,current=0,target=0,visible=false,staticScene=false
   const paint=()=>{
-   const p=staticScene ? .92 : current
+   const p=staticScene ? 1 : current
    el.style.setProperty('--vine-progress',String(p));el.dataset.progress=p.toFixed(3)
-   const points=Array.from({length:71},(_,i)=>({t:i/70,...stemPoint(i/70,p)}))
-   const path=(offset:number,grain=0)=>points.map((point,i)=>{const n=normalAt(point.t,p),shift=offset+Math.sin(i*.67+p)*grain;return (i?'L':'M')+(point.x+n.x*shift).toFixed(2)+','+(point.y+n.y*shift).toFixed(2)}).join(' ')
-   stem.current?.setAttribute('d',path(0));shade.current?.setAttribute('d',path(9));crest.current?.setAttribute('d',path(-16))
-   grains.current.forEach((grain,i)=>grain?.setAttribute('d',path((i-3)*7.4,1.5)))
-   const wrap=(front:boolean,offset=0)=>{let pen=false;return points.map(point=>{const phase=point.t*24+p*1.5,show=(Math.cos(phase)>=0)===front,n=normalAt(point.t,p),shift=Math.sin(phase)*34+offset;const command=(show&&pen?'L':'M')+(point.x+n.x*shift).toFixed(2)+','+(point.y+n.y*shift).toFixed(2);pen=show;return show?command:''}).join(' ')}
-   twines.current.forEach((node,i)=>node?.setAttribute('d',wrap(i!==0,i===3?-3:0)))
-   braidSegments.forEach(({j,k},index)=>{
-    const d=Array.from({length:5},(_,q)=>{const t=(j+q/4)/42,base=stemPoint(t,p),n=normalAt(t,p),offset=Math.sin(t*24+k*Math.PI*2/3+p*.65)*23;return (q?'L':'M')+(base.x+n.x*offset).toFixed(2)+','+(base.y+n.y*offset).toFixed(2)}).join(' ')
-    braid.current[index]?.querySelectorAll('path').forEach(path=>path.setAttribute('d',d))
-   })
-   foliage.current.forEach((node,i)=>{const t=.025+i*.0194,base=stemPoint(t,p),side=i%2?1:-1,n=normalAt(t,p),spread=26+(i%4)*8;node?.setAttribute('transform',`translate(${base.x+n.x*side*spread},${base.y+n.y*side*spread}) rotate(${side*58+Math.sin(i*2.4+p)*18}) scale(${.17+(i%3)*.025})`)})
-   if(pending.current!==null){const index=pending.current;if(smooth((p-(.045+index*.135))/.19)>.65){pending.current=null;activeRef.current=index;setActive(index);requestAnimationFrame(()=>panel.current?.focus({preventScroll:true}))}}
+   const autumn=smooth((p-.57)/.23)
+   el.style.setProperty('--season-warmth',String(autumn))
+   if(season.current)season.current.textContent=p<.19?'冬 · 静候新生':p<.47?'春 · 枝叶初生':p<.66?'夏 · 绿意繁盛':p<.82?'秋 · 层林染金':'秋 · 落叶知时'
+   treePaths.current.forEach((node,i)=>{const branch=treeBranches[i],growth=smooth((p+.18-branch.start)/.3);node?.style.setProperty('stroke-dashoffset',String(1-growth))})
+   foliage.current.forEach((node,i)=>{const item=treeFoliage[i],growth=smooth((p-item.start)/.2),fall=smooth((p-.82)/.18);node?.setAttribute('transform',`translate(${item.x},${item.y}) rotate(${item.rotation}) scale(${item.size*growth})`);node?.style.setProperty('opacity',String(growth*(1-fall*.28)));node?.style.setProperty('color',mix([78+i%4*14,128+i%3*12,59],[204+i%3*14,146+i%4*10,44],autumn))})
+   if(pending.current!==null&&p>.87){const index=pending.current;pending.current=null;activeRef.current=index;setActive(index);requestAnimationFrame(()=>panel.current?.focus({preventScroll:true}))}
    features.forEach((_,i)=>{
-    const t=.18+i*.12,base=stemPoint(t,p),side=i%2===0?1:-1,depth=Math.cos(t*7+p*1.3)
-    const x=base.x+side*(166+depth*9),y=base.y-side*36
-    const rotation=side*(12+Math.sin(t*5+p)*8)+p*10-7
-    const growth=smooth((p-(.045+i*.135))/.19)
+    const growth=smooth((p-(.76+i*.018))/.12),fall=smooth((p-(.79+i*.018))/.12),from=treeBranches[treeBranches.length-1-i*7],endX=220+i%3*330,endY=490+Math.floor(i/3)*185
+    const x=from.x+(endX-from.x)*fall+Math.sin(fall*Math.PI*3+i)*32*Math.sin(fall*Math.PI),y=from.y+(endY-from.y)*fall
+    const rotation=(i%2?1:-1)*(12+Math.sin(fall*Math.PI*2)*22),leaf=leaves.current[i]
+    leaf?.setAttribute('transform',`translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rotation.toFixed(2)}) scale(${.63*(.3+growth*.7)})`)
+    leaf?.style.setProperty('opacity',String(growth));leaf?.style.setProperty('pointer-events',growth>.65?'auto':'none');leaf?.setAttribute('tabindex',growth>.65?'0':'-1');leaf?.setAttribute('aria-hidden',String(growth<.05))
     if(activeRef.current===i&&growth<.08){activeRef.current=null;setActive(null)}
-    const scale=(.92+depth*.06)*(.3+growth*.7),leaf=leaves.current[i]
-    leaf?.setAttribute('transform',`translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rotation.toFixed(2)}) scale(${scale.toFixed(3)})`)
-    leaf?.style.setProperty('opacity',String(growth));leaf?.style.setProperty('pointer-events',growth>.3?'auto':'none');leaf?.setAttribute('tabindex',growth>.3?'0':'-1');leaf?.setAttribute('aria-hidden',String(growth<.05))
-    branches.current[i]?.setAttribute('d',`M${base.x},${base.y} C${base.x+side*50},${base.y-2} ${x-side*73},${y+44} ${x-side*35},${y+32}`)
-    branches.current[i]?.style.setProperty('opacity',String(growth*.9))
-    const curl=Array.from({length:30},(_,j)=>{const f=j/29,angle=f*Math.PI*4.3,radius=27*(1-f)+3;return (j?'L':'M')+(base.x+side*(35+f*18+Math.cos(angle)*radius)).toFixed(2)+','+(base.y+35+Math.sin(angle)*radius).toFixed(2)}).join(' ')
-    tendrils.current[i]?.setAttribute('d',`M${base.x},${base.y} Q${base.x+side*20},${base.y+9} ${base.x+side*62},${base.y+35} `+curl.replace(/^M/,'L'))
-    tendrils.current[i]?.style.setProperty('opacity',String(.66+growth*.2));buds.current[i]?.setAttribute('transform',`translate(${base.x-side*31},${base.y+31}) rotate(${side*45}) scale(${.78+growth*.17})`);buds.current[i]?.style.setProperty('opacity',String(.82+growth*.12))
-    if(activeRef.current===i)line.current?.setAttribute('d',`M${x+80},${y} C${x+200},${y} 950,358 1080,358`)
    })
-   if(progress.current)progress.current.textContent=String(Math.min(6,Math.max(0,Math.ceil((p-.045)*6)))).padStart(2,'0')
+   if(progress.current)progress.current.textContent=String(Math.min(6,Math.max(0,Math.ceil((p-.76)/.028)))).padStart(2,'0')
   }
   paintRef.current=paint
   const tick=(now:number)=>{frame=0;const dt=Math.min(64,last?now-last:16);last=now;current+=(target-current)*(1-Math.exp(-dt/110));if(Math.abs(current-target)<.0004)current=target;paint();if(visible&&current!==target)frame=requestAnimationFrame(tick)}
@@ -82,20 +74,20 @@ export function VineWorkspace(){
  return <section ref={root} id="workspace" className="vine-workspace" aria-labelledby={id+'title'} onClick={event=>{if(!(event.target as Element).closest('.vine-leaf,.vine-feature-card,.vine-stop'))close()}}>
   <div id="modules" className="vine-stage">
    <div className="vine-atmosphere" aria-hidden="true"/>
-   <header className="vine-heading"><p>THE LIVING WORKSPACE</p><h2 id={id+'title'}>循着藤蔓，<br/><span>发现田间。</span></h2><p className="vine-instruction">下滑展开叶片，点击害虫探索功能。</p></header>
-   <div className="vine-art"><svg viewBox="0 0 1100 780" preserveAspectRatio="xMidYMin meet" className="vine-drawing" aria-label="缠绕的藤蔓与六片害虫叶片"><defs>
-    <linearGradient id={id+'bark'} x1="0" y1="0" x2="1" y2="0" ><stop stopColor="#343f29"/><stop offset=".22" stopColor="#857f49"/><stop offset=".46" stopColor="#d0b87f"/><stop offset=".65" stopColor="#ad9a63"/><stop offset=".82" stopColor="#6c7442"/><stop offset="1" stopColor="#38492c"/></linearGradient>
-    <linearGradient id={id+'leaf'} x1="-100" y1="-100" x2="85" y2="70" gradientUnits="userSpaceOnUse"><stop stopColor="#cbda86"/><stop offset=".2" stopColor="#94b25c"/><stop offset=".47" stopColor="#598948"/><stop offset=".72" stopColor="#315d38"/><stop offset="1" stopColor="#163c28"/></linearGradient>
-    <linearGradient id={id+'leafEdge'} x1="-90" y1="-100" x2="90" y2="65" gradientUnits="userSpaceOnUse"><stop stopColor="#c8d78d"/><stop offset="1" stopColor="#51704b" stopOpacity=".3"/></linearGradient>
-   </defs><path ref={node=>{twines.current[0]=node}} className="vine-twine-back" fill="none" stroke="#637c38" strokeWidth="15" strokeLinecap="round" opacity=".75"/><g className="vine-trunk" fill="none" strokeLinecap="round"><path ref={shade} stroke="#000" strokeWidth="75" opacity=".25"/><path className="vine-main-stem" ref={stem} stroke={'url(#'+id+'bark)'} strokeWidth="62"/><path ref={crest} stroke="#e5ce94" strokeWidth="8" opacity=".28"/>{[0,1,2,3,4,5,6].map(i=><path key={i} ref={node=>{grains.current[i]=node}} stroke={i%2?'#3b4226':'#e4d2a0'} strokeWidth={i%2?'2.5':'1.2'} opacity=".28"/>)}{features.map((_,i)=><path key={i} ref={node=>{branches.current[i]=node}} stroke={'url(#'+id+'bark)'} strokeWidth="8"/>)}</g><g className="vine-braided-stems" fill="none" strokeLinecap="round" aria-hidden="true">{braidSegments.map(({j,k},index)=><g key={j+'-'+k} ref={node=>{braid.current[index]=node}}><path stroke="#152b18" strokeWidth="27"/><path stroke={['#748345','#a09a5b','#4e713a'][k]} strokeWidth="22"/><path stroke={['#bac084','#d4c892','#94b86e'][k]} strokeWidth="5" opacity=".44"/></g>)}</g><g className="vine-winding-stems" fill="none" strokeLinecap="round"><path ref={node=>{twines.current[1]=node}} stroke="#27351c" strokeWidth="22" opacity=".7"/><path ref={node=>{twines.current[2]=node}} stroke="#9aa35a" strokeWidth="14"/><path ref={node=>{twines.current[3]=node}} stroke="#d0ce86" strokeWidth="2.5" opacity=".55"/>{features.map((_,i)=><path key={i} ref={node=>{tendrils.current[i]=node}} className="vine-tendril" stroke="#a9be56" strokeWidth="1.8"/>)}</g>{features.map((_,i)=><g key={i} ref={node=>{buds.current[i]=node}} className="vine-bud" fill="#91ad4c" stroke="#bccb6a" strokeWidth=".6"><path d="M0 0Q-18-21-30-11Q-22 8 0 0ZM2 1Q14-19 24-14Q21 5 2 1Z"/><path d="M-1 1Q-3 17-13 19Q-19 8-1 1Z" fill="#5d843d"/><path d="M-26-10L0 0L21-12M0 0L-11 16" fill="none" stroke="#d5db93" strokeOpacity=".65"/></g>)}
-   <g className="vine-dense-foliage" aria-hidden="true" pointerEvents="none">{Array.from({length:50},(_,i)=><g key={i} ref={node=>{foliage.current[i]=node}}><path d="M-12 22Q-60 110-141 137Q-180 152-168 112Q-158 89-137 105Q-125 117-145 124M-75 78Q-20 103 37 100" fill="none" stroke="#a8b85b" strokeWidth="5"/><path d={ivyLeaf} fill={['#638d3d','#8ca84d','#416f35','#b0bd65'][i%4]} stroke="#c5d185" strokeWidth="1.8"/><path d="M-106 35L23-29L35-125M23-29L-62-102M23-29L132-56M23-29L62 79M23-29L-40 81" fill="none" stroke="#d9dfa2" strokeOpacity=".4" strokeWidth="2.4"/><g transform="translate(-109 116) rotate(105) scale(.6)"><path d={ivyLeaf} fill={i%2?'#7e9e45':'#487535'}/></g></g>)}</g>
-   <path ref={line} className={'vine-selection-line'+(active!==null?' visible':'')} fill="none" stroke="#bfcb95" strokeWidth="1" strokeDasharray="3 6"/>
+   <header className="vine-heading"><p>A YEAR IN ONE TREE</p><h2 id={id+'title'}>一树四季，<br/><span>落叶知时。</span></h2><p className="vine-instruction">随下滑见证生长，点击秋日落叶探索功能。</p></header>
+   <div className="vine-art"><svg viewBox="0 0 1100 780" preserveAspectRatio="xMidYMid meet" className="vine-drawing" aria-label="随滚动从冬到秋生长的树木与六片功能落叶"><defs>
+    <linearGradient id={id+'bark'}><stop stopColor="#392e27"/><stop offset=".48" stopColor="#ad8b66"/><stop offset="1" stopColor="#554331"/></linearGradient>
+    <linearGradient id={id+'leaf'} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#ecd485"/><stop offset=".45" stopColor="#cfaa49"/><stop offset="1" stopColor="#8a5d2c"/></linearGradient>
+    <linearGradient id={id+'leafEdge'}><stop stopColor="#f5d78a"/><stop offset="1" stopColor="#a67c38"/></linearGradient>
+   </defs><ellipse cx="550" cy="739" rx="210" ry="14" fill="#000" opacity=".18"/>
+   <g className="season-tree-winter" fill="none" stroke="#8c7b65" strokeLinecap="round" opacity=".65">{treeBranches.map((branch,i)=><path key={i} d={branch.d} strokeWidth={Math.max(1,branch.width*.45)}/>)}</g><g className="season-tree-branches" fill="none" stroke={'url(#'+id+'bark)'} strokeLinecap="round">{treeBranches.map((branch,i)=><path key={i} ref={node=>{treePaths.current[i]=node}} d={branch.d} strokeWidth={branch.width} pathLength="1" strokeDasharray="1" strokeDashoffset="1"/>)}</g>
+   <g className="season-tree-foliage" pointerEvents="none" aria-hidden="true">{treeFoliage.map((_,i)=><g key={i} ref={node=>{foliage.current[i]=node}} opacity="0"><path d={ivyLeaf} fill="currentColor"/><path d="M-106 35L23-29L35-125M23-29L-62-102M23-29L132-56M23-29L62 79M23-29L-40 81" fill="none" stroke="#f1e3b2" strokeOpacity=".28" strokeWidth="3"/></g>)}</g>
    {features.map((item,i)=><g key={item.path} ref={node=>{leaves.current[i]=node}} className={'vine-leaf'+(active===i?' selected':'')} role="button" tabIndex={-1} aria-hidden={true} aria-label={item.pest+' · 打开'+item.label} aria-expanded={active===i} aria-controls={id+'card'} onClick={event=>{event.stopPropagation();choose(i)}} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose(i)}}}>
     <g className="vine-leaf-surface"><g className="vine-leaf-shape" transform={i%2===0?'scale(1 1)':'scale(-1 1)'}><path className="leaf-halo" d={ivyLeaf}/><path d={ivyLeaf} fill={'url(#'+id+'leaf)'} stroke={'url(#'+id+'leafEdge)'} strokeWidth="1.5"/>
     <g fill="none" stroke="#d0da94" strokeLinecap="round"><path d="M-108 38Q-30 23 26-29L37-126" strokeWidth="1.8" opacity=".65"/><path d="M26-29Q-27-46-63-101M26-29Q80-52 130-57M26-29Q61 13 63 78M-11 2Q-30 49-40 80M-11 2Q-73-18-124-56M54-43L53-76M77-52L96-38M43 0L88 17M-24-44L-54-68" strokeWidth="1" opacity=".24"/></g><path className="vine-leaf-luster" d="M-104 26L-119-51L-76-50L-62-92L-17-71L34-119L46-78Q19-19-104 26Z" fill="#e5ecaa" opacity=".085"/></g><g transform={'rotate('+(-13+i*8)+')'}><FieldPest kind={i}/></g><circle cx={i%2===0?-72:72} cy="19" r="13" fill="#e5eeb6" fillOpacity=".11" stroke="#d9e6a2" strokeOpacity=".55"/><text x={i%2===0?-72:72} y="23" textAnchor="middle" fill="#e2eabe" fontSize="10" fontFamily="monospace">{i+1}</text></g><text className="vine-pest-name" x="0" y="105" textAnchor="middle">{item.pest}</text>
    </g>)}
    </svg></div>
-   {feature&&active!==null?<section key={feature.path} ref={panel} id={id+'card'} className="vine-feature-card" aria-label={feature.label+'功能卡片'} tabIndex={-1}><button className="vine-card-close" aria-label="关闭功能卡片" onClick={()=>close(true)}>×</button><span className="vine-card-eyebrow">叶片 {String(active+1).padStart(2,'0')} / {feature.pest}</span><span className="vine-card-icon"><Icon index={active+1}/></span><h3>{feature.label}</h3><p>{feature.description}</p><Link className="vine-use-feature" to={feature.path}>进入{feature.label}<span aria-hidden="true">↗</span></Link></section>:<aside className="vine-discover-hint"><span className="vine-hint-orbit" aria-hidden="true">↗</span><p>小小叶片，<br/>连接每一次观察。</p><span>点击叶片上的害虫<br/>展开你的功能入口</span></aside>}
+   {feature&&active!==null?<section key={feature.path} ref={panel} id={id+'card'} className="vine-feature-card" aria-label={feature.label+'功能卡片'} tabIndex={-1}><button className="vine-card-close" aria-label="关闭功能卡片" onClick={()=>close(true)}>×</button><span className="vine-card-eyebrow">叶片 {String(active+1).padStart(2,'0')} / {feature.pest}</span><span className="vine-card-icon"><Icon index={active+1}/></span><h3>{feature.label}</h3><p>{feature.description}</p><Link className="vine-use-feature" to={feature.path}>进入{feature.label}<span aria-hidden="true">↗</span></Link></section>:<aside className="vine-discover-hint"><span className="vine-hint-orbit" aria-hidden="true">↗</span><p>从静候新生，<br/>到一叶知秋。</p><span ref={season} className="tree-season-label">冬 · 静候新生</span><span>秋日落叶，连接六种田间能力。</span></aside>}
    <footer className="vine-scene-footer"><div className="vine-scroll-caption"><span className="vine-scroll-mark" aria-hidden="true"/><span>向下探索</span><span ref={progress}>00</span><span className="vine-divider">/ 06</span></div><nav className="vine-selectors" aria-label="按功能探索叶片">{features.map((item,i)=><button key={item.path} className={'vine-stop'+(active===i?' active':'')} onClick={()=>seek(i)} aria-label={'查看'+item.pest+'与'+item.label} aria-pressed={active===i}><span>0{i+1}</span><span>{item.label}</span></button>)}</nav><span className="vine-field-note">HECHA / FIELD ENCOUNTERS</span></footer>
   </div>
  </section>

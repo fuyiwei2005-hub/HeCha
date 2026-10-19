@@ -21,3 +21,14 @@
 @media(min-width:721px) and (max-height:740px){.vine-art{top:112px;bottom:80px}.vine-heading{top:24px}.vine-heading h2{font-size:26px}}
 
 .vine-stage{overflow:clip}
+
+/* One tree, four seasons; all movement follows scroll and reverses with it. */
+.vine-workspace{height:460svh;min-height:2800px}
+.vine-stage{background:radial-gradient(ellipse at 45% 42%,#29382f,#101e19 65%,#0a1512)}
+.vine-atmosphere{background:radial-gradient(ellipse at 50% 50%,#b7984826,transparent 70%);opacity:var(--season-warmth,0)}
+.vine-art{top:132px;left:1%;right:24%;bottom:95px}
+.season-tree-branches{filter:drop-shadow(4px 8px 5px #0004)}
+.season-tree-foliage{filter:drop-shadow(1px 3px 2px #0002)}
+.tree-season-label{display:block;font-size:14px;letter-spacing:.18em;color:#d8c48d;margin:0 0 18px}
+.vine-pest-name{fill:#dcc18b}.vine-discover-hint>span:last-child{display:block}
+@media(max-width:720px){.vine-workspace{height:460svh;min-height:2500px}.vine-art{top:140px;left:-10%;right:-10%;bottom:110px}.tree-season-label{font-size:10px;margin-bottom:5px}.vine-discover-hint{bottom:93px}.vine-discover-hint>span:last-child{font-size:8px}.vine-workspace[data-motion=reduced] .vine-art,.vine-workspace[data-motion=static] .vine-art{top:140px;bottom:110px}}
