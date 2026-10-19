@@ -8,10 +8,13 @@ const ivyLeaf='M-112 28 Q-91 3-111-25 L-136-62 L-77-60 Q-66-66-65-77 L-72-112 L-
 const treeBranches:{d:string,width:number,start:number,x:number,y:number}[]=[]
 function growBranch(x:number,y:number,length:number,angle:number,depth:number,seed:number){
  const endX=x+Math.cos(angle)*length,endY=y+Math.sin(angle)*length
- treeBranches.push({d:`M${x} ${y} Q${x+Math.cos(angle+.12)*length*.48} ${y+Math.sin(angle+.12)*length*.48} ${endX} ${endY}`,width:Math.max(1.1,depth*depth*2.4),start:depth===5?-.2:.1+(4-depth)*.055,x:endX,y:endY})
+ treeBranches.push({d:`M${x} ${y} Q${x+Math.cos(angle+.12)*length*.48} ${y+Math.sin(angle+.12)*length*.48} ${endX} ${endY}`,width:Math.max(1.1,depth*depth*2.4),start:depth>=4?.08:.13+(3-depth)*.055,x:endX,y:endY})
  if(depth>0){growBranch(endX,endY,length*(.68+Math.sin(seed)*.035),angle-.52,depth-1,seed+1);growBranch(endX,endY,length*(.7+Math.cos(seed)*.025),angle+.55,depth-1,seed+3)}
 }
-growBranch(550,732,235,-Math.PI/2,5,2)
+treeBranches.push({d:'M1060 820C1000 620 1078 355 1035-80',width:82,start:-.2,x:1035,y:-80})
+growBranch(1042,125,285,-2.96,4,2)
+growBranch(1041,300,210,-2.92,4,9)
+growBranch(1037,10,310,-3.03,4,4)
 const treeFoliage=treeBranches.filter(b=>b.width<11).flatMap((b,i)=>Array.from({length:9},(_,j)=>({x:b.x+Math.sin(i*2.3+j*3)*37,y:b.y+Math.cos(i*1.7+j*2)*32,rotation:Math.sin(i*3+j)*125,size:.15+(i%4)*.018,start:.23+(i%17)*.009})))
 const mix=(a:number[],b:number[],t:number)=>`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*clamp(t))).join(',')})`
 const pests=['蚜虫','稻飞虱','棉铃虫','白粉虱','蝗虫','蓟马']
@@ -49,7 +52,7 @@ export function VineWorkspace(){
    el.style.setProperty('--season-warmth',String(autumn))
    if(season.current)season.current.textContent=p<.19?'冬 · 静候新生':p<.47?'春 · 枝叶初生':p<.66?'夏 · 绿意繁盛':p<.82?'秋 · 层林染金':'秋 · 落叶知时'
    treePaths.current.forEach((node,i)=>{const branch=treeBranches[i],growth=smooth((p-branch.start)/.055);node?.style.setProperty('stroke-dashoffset',String(1-growth));node?.style.setProperty('opacity',growth>.001?'1':'0')})
-   foliage.current.forEach((node,i)=>{const item=treeFoliage[i],growth=smooth((p-item.start)/.15),fall=smooth((p-(.76+(i%19)*.006))/.2),x=item.x+Math.sin(fall*8+i)*fall*75,y=item.y+fall*(180+i%7*35);node?.setAttribute('transform',`translate(${x},${y}) rotate(${item.rotation+fall*(i%2?115:-135)}) scale(${item.size*growth})`);node?.style.setProperty('opacity',String(growth*(1-fall*.98)));node?.style.setProperty('color',mix([59+i%4*13,115+i%3*12,46],[204+i%3*14,146+i%4*10,44],autumn))})
+   foliage.current.forEach((node,i)=>{const item=treeFoliage[i],growth=smooth((p-item.start)/.15),fall=smooth((p-(.76+(i%19)*.006))/.2),x=item.x+Math.sin(fall*8+i)*fall*75,y=item.y+fall*(180+i%7*35);node?.setAttribute('transform',`translate(${x},${y}) rotate(${item.rotation+fall*(i%2?115:-135)}) scale(${item.size*growth})`);node?.style.setProperty('opacity',String(growth*(1-fall*.98)));node?.style.setProperty('color',mix([76+i%4*12,132+i%3*10,52],[206+i%3*12,137+i%4*9,36],autumn))})
    if(pending.current!==null&&p>.87){const index=pending.current;pending.current=null;activeRef.current=index;setActive(index);requestAnimationFrame(()=>panel.current?.focus({preventScroll:true}))}
    features.forEach((_,i)=>{
     const growth=smooth((p-(.71+i*.012))/.1),fall=smooth((p-(.72+i*.012))/.22),from=treeBranches[treeBranches.length-1-i*7],rest=restingLeaves[i]
@@ -75,11 +78,11 @@ export function VineWorkspace(){
   <div id="modules" className="vine-stage">
    <div className="vine-atmosphere" aria-hidden="true"/>
    <header className="vine-heading"><p>A YEAR IN ONE TREE</p><h2 id={id+'title'}>一树四季，<br/><span>落叶知时。</span></h2><p className="vine-instruction">随下滑见证生长，点击秋日落叶探索功能。</p></header>
-   <div className="vine-art"><svg viewBox="0 0 1100 780" preserveAspectRatio="xMidYMid meet" className="vine-drawing" aria-label="随滚动从冬到秋生长的树木与六片功能落叶"><defs>
+   <svg className="season-side-trunk" viewBox="0 0 160 800" preserveAspectRatio="none" aria-hidden="true"><path d="M115 850C49 640 132 430 89 220Q70 92 108-80" fill="none" stroke="#68503a" strokeWidth="57"/><path d="M105 850C43 640 123 430 80 220Q61 92 99-80" fill="none" stroke="#a58b61" strokeWidth="9" opacity=".55"/></svg><div className="vine-art"><svg viewBox="0 0 1100 780" preserveAspectRatio="xMidYMid meet" className="vine-drawing" aria-label="随滚动从冬到秋生长的树木与六片功能落叶"><defs>
     <linearGradient id={id+'bark'}><stop stopColor="#392e27"/><stop offset=".48" stopColor="#ad8b66"/><stop offset="1" stopColor="#554331"/></linearGradient>
     <linearGradient id={id+'leaf'} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#ecd485"/><stop offset=".45" stopColor="#cfaa49"/><stop offset="1" stopColor="#8a5d2c"/></linearGradient>
     <linearGradient id={id+'leafEdge'}><stop stopColor="#f5d78a"/><stop offset="1" stopColor="#a67c38"/></linearGradient>
-   </defs><path className="tree-root-flare" d="M508 735Q534 696 526 669L571 669Q565 713 596 735Q553 721 508 735Z" fill={'url(#'+id+'bark)'}/><ellipse cx="550" cy="739" rx="210" ry="14" fill="#000" opacity=".18"/>
+   </defs><g className="tree-distant-landscape" aria-hidden="true"><path d="M0 620L85 580L160 604L260 555L350 586L440 560L540 601L680 566L780 606L920 570L1100 610V780H0Z" fill="#a7ad8b" opacity=".2"/><path d="M0 687L120 648L240 682L380 621L530 667L650 631L790 675L930 642L1100 684V780H0Z" fill="#899777" opacity=".16"/></g>
    <g className="season-tree-winter" fill="none" stroke="#8c7b65" strokeLinecap="round" opacity=".65">{treeBranches.slice(0,1).map((branch,i)=><path key={i} d={branch.d} strokeWidth={branch.width}/>)}</g><g className="season-tree-branches" fill="none" stroke={'url(#'+id+'bark)'} strokeLinecap="round">{treeBranches.map((branch,i)=><path key={i} ref={node=>{treePaths.current[i]=node}} d={branch.d} strokeWidth={branch.width} pathLength="1" strokeDasharray="1" strokeDashoffset="1"/>)}</g>
    <g className="season-tree-foliage" pointerEvents="none" aria-hidden="true">{treeFoliage.map((_,i)=><g key={i} ref={node=>{foliage.current[i]=node}} opacity="0"><path d={ivyLeaf} fill="currentColor"/><path d="M-106 35L23-29L35-125M23-29L-62-102M23-29L132-56M23-29L62 79M23-29L-40 81" fill="none" stroke="#f1e3b2" strokeOpacity=".28" strokeWidth="3"/></g>)}</g>
    {features.map((item,i)=><g key={item.path} ref={node=>{leaves.current[i]=node}} className={'vine-leaf'+(active===i?' selected':'')} role="button" tabIndex={-1} aria-hidden={true} aria-label={item.pest+' · 打开'+item.label} aria-expanded={active===i} aria-controls={id+'card'} onClick={event=>{event.stopPropagation();choose(i)}} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose(i)}}}>

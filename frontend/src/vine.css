@@ -37,3 +37,14 @@
 .vine-workspace{height:540svh;min-height:3200px}.vine-art{top:123px;right:23%}.season-tree-winter,.tree-root-flare{filter:drop-shadow(5px 8px 5px #0004)}
 @media(max-width:720px){.vine-workspace{height:540svh;min-height:3000px}.vine-art{top:135px;left:-10%;right:-10%;bottom:110px}}
 @media(max-width:360px){.vine-heading h2{font-size:22px}}
+
+/* Side-framed canopy and warm mountain light inspired by the reference composition. */
+.vine-workspace{background:#f5ecd3;color:#544a34}.vine-stage{background:radial-gradient(ellipse at 29% 35%,#fffbea,#f1e5c7 64%,#dcc99f)}
+.vine-atmosphere{background:radial-gradient(ellipse at 75% 20%,#e7af4240,transparent 76%)}.vine-atmosphere:after{display:none}
+.season-side-trunk{position:absolute;right:-2%;top:-3%;height:110%;width:14%;pointer-events:none;filter:drop-shadow(-6px 6px 7px #4a35151a)}
+.vine-art{top:0;bottom:95px;left:0;right:0}.vine-drawing{overflow:visible}
+.vine-heading{top:37px;left:5%;max-width:52%}.vine-heading>p:first-child{color:#8a815b}.vine-heading h2{color:#494d32}.vine-heading h2 span{color:#8b8555}.vine-instruction{color:#8b8266}
+.vine-discover-hint{left:5%;right:auto;top:auto;bottom:120px;width:auto}.vine-discover-hint>p,.vine-hint-orbit{display:none}.tree-season-label{color:#8b622c}.vine-discover-hint>span:last-child{color:#928362}
+.vine-scene-footer{border-color:#8d784f33}.vine-stop{color:#877953;border-color:#9c8b6138}.vine-stop:hover,.vine-stop.active{color:#594b2a;border-color:#8a6e38}.vine-scroll-caption,.vine-scroll-caption>span:nth-child(3),.vine-divider,.vine-field-note{color:#8b7954}.vine-pest-name{fill:#725b33}.leaf-halo{stroke:#7e652e}.vine-leaf-surface{filter:drop-shadow(5px 12px 8px #684e282b)}
+@media(max-width:720px){.vine-art{top:92px;bottom:110px;left:-8%;right:-8%}.season-side-trunk{width:17%;right:-4%;top:0;height:100%}.vine-heading{top:25px;max-width:85%}.vine-discover-hint{bottom:91px;left:24px}.vine-workspace[data-motion=reduced] .vine-art,.vine-workspace[data-motion=static] .vine-art{top:92px;bottom:110px;left:-8%;right:-8%}}
+.vine-heading{padding:14px 18px;border-radius:12px;background:linear-gradient(110deg,#fff9e9ed,#fff9e9ad);backdrop-filter:blur(7px)}.vine-heading h2{font-size:28px}@media(max-width:720px){.vine-heading{left:20px;right:54px;max-width:none;padding:10px 12px}.vine-heading h2{font-size:23px}}
