@@ -37,7 +37,7 @@ export function VineWorkspace(){
   const el=root.current;if(!el)return
   if(el.dataset.motion==='scroll'){
    pending.current=index
-   const header=innerWidth<=620?76:88,rect=el.getBoundingClientRect(),top=rect.top+scrollY-header,range=Math.max(1,el.offsetHeight-innerHeight+header)
+   const header=innerWidth<=800?76:88,rect=el.getBoundingClientRect(),top=rect.top+scrollY-header,range=Math.max(1,el.offsetHeight-innerHeight+header)
    window.scrollTo({top:top+range*clamp(.91+index*.014),behavior:'smooth'});paintRef.current()
   }else choose(index)
  }
@@ -66,7 +66,7 @@ export function VineWorkspace(){
   }
   paintRef.current=paint
   const tick=(now:number)=>{frame=0;const dt=Math.min(64,last?now-last:16);last=now;current+=(target-current)*(1-Math.exp(-dt/110));if(Math.abs(current-target)<.0004)current=target;paint();if(visible&&current!==target)frame=requestAnimationFrame(tick)}
-  const measure=()=>{if(staticScene)return;const rect=el.getBoundingClientRect(),header=innerWidth<=620?76:88;target=clamp((header-rect.top)/Math.max(1,rect.height-innerHeight+header));if(visible&&!frame){last=0;frame=requestAnimationFrame(tick)}}
+  const measure=()=>{if(staticScene)return;const rect=el.getBoundingClientRect(),header=innerWidth<=800?76:88;target=clamp((header-rect.top)/Math.max(1,rect.height-innerHeight+header));if(visible&&!frame){last=0;frame=requestAnimationFrame(tick)}}
   const sync=()=>{cancelAnimationFrame(frame);frame=0;staticScene=reduced.matches||short.matches;el.dataset.motion=reduced.matches?'reduced':short.matches?'static':'scroll';pending.current=null;if(!staticScene){measure();current=target}paint()}
   const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible){measure();paint()}else{cancelAnimationFrame(frame);frame=0}},{rootMargin:'140px'})
   observer.observe(el);addEventListener('scroll',measure,{passive:true});addEventListener('resize',sync);const cancelSeek=()=>{pending.current=null};addEventListener('wheel',cancelSeek,{passive:true});addEventListener('touchstart',cancelSeek,{passive:true});reduced.addEventListener('change',sync);short.addEventListener('change',sync);sync()
