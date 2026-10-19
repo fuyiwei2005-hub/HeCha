@@ -3,7 +3,7 @@ const {spawn}=require('child_process');
 const {chromium}=require(process.env.PESTGUARD_PLAYWRIGHT_MODULE);
 const root=path.resolve(__dirname,'..'),out=path.join(root,'output','react-smoke'),base='http://127.0.0.1:18081';
 fs.mkdirSync(out,{recursive:true});
-const python=path.join(root,'.venv','Scripts','python.exe'),pause=ms=>new Promise(r=>setTimeout(r,ms));
+const python=process.env.PESTGUARD_PYTHON||path.join(root,'.venv','Scripts','python.exe'),pause=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{
  const log=fs.openSync(path.join(out,'server.log'),'w');
  const server=spawn(python,[path.join(root,'tools/smoke_full.py'),'18081'],{cwd:root,windowsHide:true,stdio:['ignore',log,log],env:{...process.env,PRODUCT_FRONTEND:'react',PYTHONIOENCODING:'utf-8'}});
@@ -18,22 +18,12 @@ const python=path.join(root,'.venv','Scripts','python.exe'),pause=ms=>new Promis
   assert.equal(await page.locator('#modules').count(),0);assert(!(await page.locator('body').innerText()).includes('PESTGUARD'));
   await page.screenshot({path:path.join(out,'login-desktop.png'),fullPage:true,animations:'disabled'});checks.push('first visit opens branded login before product');
   await page.getByRole('button',{name:'没有账号？去注册'}).click();await page.locator('#username').fill(username);await page.locator('#password').fill(password);await page.getByRole('button',{name:'注册并登录',exact:true}).click();
-  await page.waitForURL(base+'/');await page.locator('#modules').waitFor();assert.equal(await page.locator('.module-card').count(),6);checks.push('registration enters module homepage');
+  await page.waitForURL(base+'/');await page.locator('#modules').waitFor();assert.equal(await page.locator('.vine-leaf').count(),6);checks.push('registration enters module homepage');
   assert.equal(await page.locator('#imgFile').count(),0);assert.equal(await page.locator('#history').count(),0);checks.push('home does not stack functional modules');
-  // Validate actual scroll-driven transforms, then the reduced-motion reading fallback.
-  const story=page.locator('.scroll-story');await story.waitFor();
-  const progress=[];
-  for(const value of [.02,.5,.98]){
-   await story.evaluate((el,value)=>window.scrollTo({top:el.getBoundingClientRect().top+scrollY+(el.offsetHeight-innerHeight)*value,behavior:'instant'}),value);
-   await page.waitForFunction(value=>Math.abs(Number(getComputedStyle(document.querySelector('.scroll-story')).getPropertyValue('--story-progress'))-value)<.02,value);
-   progress.push(await story.evaluate(el=>Number(getComputedStyle(el).getPropertyValue('--story-progress'))));
-   assert.equal(await page.locator('.story-chapter[aria-hidden="false"]').count(),1);
-   if(value===.5){await page.screenshot({path:path.join(out,'motion-desktop.png'),animations:'disabled'});}
-  }
-  assert(progress[2]-progress[0]>.9);checks.push('native scroll drives all three story stages and visual transforms');
-  const timing=await page.evaluate(async()=>{const gaps=[];let last=performance.now();for(let i=0;i<60;i++){const now=await new Promise(requestAnimationFrame);gaps.push(now-last);last=now;}gaps.sort((a,b)=>a-b);return {medianMs:gaps[30],p95Ms:gaps[57],over50ms:gaps.filter(v=>v>50).length};});
-  fs.writeFileSync(path.join(out,'motion-timing.json'),JSON.stringify({timing,note:'Headless Edge sample on this machine; not a guarantee for other devices.'},null,2));
-  await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.story-reduced').waitFor();assert.equal(await page.locator('.story-chapter[aria-hidden="true"]').count(),0);assert.equal(await page.locator('.story-sticky').evaluate(el=>getComputedStyle(el).position),'relative');checks.push('reduced motion shows every chapter without a pinned scrolling scene');
+  const vine=page.locator('.vine-workspace');await vine.waitFor();
+  for(const value of [.02,.5,.98]){await vine.evaluate((el,value)=>window.scrollTo({top:el.getBoundingClientRect().top+scrollY-88+(el.offsetHeight-innerHeight+88)*value,behavior:'instant'}),value);await page.waitForFunction(value=>Math.abs(Number(document.querySelector('.vine-workspace').dataset.progress)-value)<.02,value);}
+  assert.equal(await page.locator('.vine-leaf[aria-hidden="false"]').count(),6);checks.push('scroll rotates the vine and reveals all six pest leaves');
+  await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.vine-workspace[data-motion="reduced"]').waitFor();assert.equal(await page.locator('.vine-leaf[aria-hidden="false"]').count(),6);checks.push('reduced motion exposes all feature leaves without a pinned scene');
   await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
   await page.screenshot({path:path.join(out,'home-desktop.png'),fullPage:true,animations:'disabled'});
   await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:path.join(out,'home-mobile.png'),fullPage:true,animations:'disabled'});await page.setViewportSize({width:1440,height:1000});
@@ -55,7 +45,7 @@ const python=path.join(root,'.venv','Scripts','python.exe'),pause=ms=>new Promis
   await page.setViewportSize({width:390,height:844});await page.locator('#contact').evaluate(el=>el.scrollIntoView({behavior:'instant',block:'start'}));assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:path.join(out,'contact-mobile.png'),fullPage:false,animations:'disabled'});await page.reload();await page.locator('#contact').waitFor();await page.waitForFunction(()=>document.querySelector('#contact').getBoundingClientRect().top<innerHeight);checks.push('contact is a responsive homepage footer with working cross-page and refresh anchors');
   await page.setViewportSize({width:1440,height:1000});await page.goto(base+'/model');await page.waitForURL(base+'/');assert.equal(await page.locator('.model-editorial').count(),0);assert.equal(await page.locator('a[href="/model"]').count(),0);await page.goto(base+'/contact');await page.waitForURL(base+'/#contact');checks.push('removed model redirects home and former contact route opens homepage footer');
 
-  await page.goto(base+'/');await page.locator('a.module-card[href="/detect"]').click();await page.locator('#console').waitFor();await page.goBack();await page.locator('#modules').waitFor();await page.goForward();await page.locator('#console').waitFor();checks.push('router links and browser history');
+  await page.goto(base+'/');await page.getByRole('button',{name:'查看蚜虫与图片识别',exact:true}).click();await page.locator('.vine-use-feature').click();await page.locator('#console').waitFor();await page.goBack();await page.locator('#modules').waitFor();await page.goForward();await page.locator('#console').waitFor();checks.push('router links and browser history');
   await page.waitForFunction(()=>document.querySelector('select')?.options.length>1);
   const fixture=spawn(python,['-c',"from PIL import Image; import cv2,numpy as np,sys; Image.new('RGB',(64,64),'green').save(sys.argv[1]); w=cv2.VideoWriter(sys.argv[2],cv2.VideoWriter_fourcc(*'mp4v'),10,(64,64)); [w.write(np.zeros((64,64,3),dtype=np.uint8)) for _ in range(10)]; w.release()",path.join(out,'image.png'),path.join(out,'video.mp4')],{windowsHide:true});await new Promise((resolve,reject)=>fixture.on('exit',code=>code===0?resolve():reject(Error('fixtures'))));
   await page.locator('select').selectOption({index:1});const crop=await page.locator('select').inputValue();await page.reload();await page.locator('select').waitFor();await page.waitForFunction(value=>document.querySelector('select')?.value===value,crop);checks.push('crop selection persists');

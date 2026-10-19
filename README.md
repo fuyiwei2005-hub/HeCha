@@ -4,7 +4,7 @@
 保留 FastAPI、SQLAlchemy、定制 YOLO 运行时和 DeepSeek 分析；本地任务可在无 Redis 环境运行。
 
 首页 `/`、登录 `/login`、图片 `/detect`、视频 `/video`、历史 `/history`、统计 `/statistics`，以及核心能力、技术介绍和部署页面均支持直接访问与刷新。“联系我们”位于首页底部，模型说明页面已移除。
-首次访问先登录；直接访问模块时，登录后返回原模块。左侧全高抽屉支持展开、收起、等高导航和键盘操作；页面切换带统一过渡，首页提供滚动联动展示，并适配减少动态效果设置。
+首次访问先登录；直接访问模块时，登录后返回原模块。左侧全高抽屉支持展开、收起、等高导航和键盘操作；页面切换带统一过渡，首页以滚动旋转的藤蔓和六片害虫叶片展示功能入口；点击叶片展开功能卡片。手机、键盘和减少动态效果设置均可使用。
 
 图片识别结果与 AI 建议独立保存；建议失败时保留识别结果并支持重试。历史追问、反馈和作物选择支持刷新恢复。
 详情见 [前端说明](frontend/README.md) 与 [架构进度](docs/refactor/architecture.md)。
@@ -114,3 +114,5 @@ cd ..
 仓库不包含 API 密钥、服务器登录信息、实际 `.env`、用户数据库、上传记录、虚拟环境、`node_modules` 或构建产物。请参考 `.env.example` 自行配置服务；不要将实际环境文件提交到 Git。
 
 前端需要先执行 `npm ci && npm run build`。模型功能需要额外安装 `backend/requirements-model.txt`；仅安装基础依赖时，启动器会明确标注演示模式。
+
+藤蔓交互专项验证：`tools/browser_vine.cjs`，覆盖逐片展开、滚动回退、六个功能入口、键盘操作和手机布局。可通过 `PESTGUARD_PYTHON` 指定测试用 Python，通过 `PESTGUARD_PLAYWRIGHT_MODULE` 指定 Playwright。
