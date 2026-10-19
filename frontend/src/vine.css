@@ -32,3 +32,8 @@
 .tree-season-label{display:block;font-size:14px;letter-spacing:.18em;color:#d8c48d;margin:0 0 18px}
 .vine-pest-name{fill:#dcc18b}.vine-discover-hint>span:last-child{display:block}
 @media(max-width:720px){.vine-workspace{height:460svh;min-height:2500px}.vine-art{top:140px;left:-10%;right:-10%;bottom:110px}.tree-season-label{font-size:10px;margin-bottom:5px}.vine-discover-hint{bottom:93px}.vine-discover-hint>span:last-child{font-size:8px}.vine-workspace[data-motion=reduced] .vine-art,.vine-workspace[data-motion=static] .vine-art{top:140px;bottom:110px}}
+
+/* Longer autumn passage gives each leaf its own drifting descent. */
+.vine-workspace{height:540svh;min-height:3200px}.vine-art{top:123px;right:23%}.season-tree-winter,.tree-root-flare{filter:drop-shadow(5px 8px 5px #0004)}
+@media(max-width:720px){.vine-workspace{height:540svh;min-height:3000px}.vine-art{top:135px;left:-10%;right:-10%;bottom:110px}}
+@media(max-width:360px){.vine-heading h2{font-size:22px}}

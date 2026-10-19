@@ -8,18 +8,17 @@ const ivyLeaf='M-112 28 Q-91 3-111-25 L-136-62 L-77-60 Q-66-66-65-77 L-72-112 L-
 const treeBranches:{d:string,width:number,start:number,x:number,y:number}[]=[]
 function growBranch(x:number,y:number,length:number,angle:number,depth:number,seed:number){
  const endX=x+Math.cos(angle)*length,endY=y+Math.sin(angle)*length
- treeBranches.push({d:`M${x} ${y} Q${x+Math.cos(angle+.12)*length*.48} ${y+Math.sin(angle+.12)*length*.48} ${endX} ${endY}`,width:Math.max(1.1,depth*depth*1.35),start:(5-depth)*.07,x:endX,y:endY})
- if(depth>0){growBranch(endX,endY,length*(.68+Math.sin(seed)*.035),angle-.43,depth-1,seed+1);growBranch(endX,endY,length*(.7+Math.cos(seed)*.025),angle+.48,depth-1,seed+3)}
+ treeBranches.push({d:`M${x} ${y} Q${x+Math.cos(angle+.12)*length*.48} ${y+Math.sin(angle+.12)*length*.48} ${endX} ${endY}`,width:Math.max(1.1,depth*depth*2.4),start:depth===5?-.2:.1+(4-depth)*.055,x:endX,y:endY})
+ if(depth>0){growBranch(endX,endY,length*(.68+Math.sin(seed)*.035),angle-.52,depth-1,seed+1);growBranch(endX,endY,length*(.7+Math.cos(seed)*.025),angle+.55,depth-1,seed+3)}
 }
-growBranch(550,732,206,-Math.PI/2,5,2)
-const treeFoliage=treeBranches.filter(b=>b.width<7).flatMap((b,i)=>Array.from({length:3},(_,j)=>({x:b.x+Math.sin(i*2.3+j*3)*23,y:b.y+Math.cos(i*1.7+j*2)*19,rotation:Math.sin(i*3+j)*125,size:.12+(i%4)*.018,start:.28+(i%13)*.016})))
+growBranch(550,732,235,-Math.PI/2,5,2)
+const treeFoliage=treeBranches.filter(b=>b.width<11).flatMap((b,i)=>Array.from({length:9},(_,j)=>({x:b.x+Math.sin(i*2.3+j*3)*37,y:b.y+Math.cos(i*1.7+j*2)*32,rotation:Math.sin(i*3+j)*125,size:.15+(i%4)*.018,start:.23+(i%17)*.009})))
 const mix=(a:number[],b:number[],t:number)=>`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*clamp(t))).join(',')})`
 const pests=['蚜虫','稻飞虱','棉铃虫','白粉虱','蝗虫','蓟马']
 const features=modules.slice(1,7).map(([path,label,description],index)=>({path,label,description,pest:pests[index]}))
 const clamp=(value:number,min=0,max=1)=>Math.max(min,Math.min(max,value))
 const smooth=(value:number)=>{const t=clamp(value);return t*t*(3-2*t)}
-function stemPoint(t:number,p:number){return {x:190+t*650+Math.sin(t*8.2+p*1.35)*33,y:10+t*750}}
-function normalAt(t:number,p:number){const dx=650+270.6*Math.cos(t*8.2+p*1.35),length=Math.hypot(dx,750);return {x:750/length,y:-dx/length}}
+const restingLeaves=[{x:185,y:570,angle:-24},{x:455,y:690,angle:19},{x:805,y:515,angle:-14},{x:375,y:460,angle:32},{x:665,y:735,angle:-29},{x:945,y:680,angle:15}]
 
 export function VineWorkspace(){
  const id=useId().replace(/:/g,'')
@@ -49,14 +48,15 @@ export function VineWorkspace(){
    const autumn=smooth((p-.57)/.23)
    el.style.setProperty('--season-warmth',String(autumn))
    if(season.current)season.current.textContent=p<.19?'冬 · 静候新生':p<.47?'春 · 枝叶初生':p<.66?'夏 · 绿意繁盛':p<.82?'秋 · 层林染金':'秋 · 落叶知时'
-   treePaths.current.forEach((node,i)=>{const branch=treeBranches[i],growth=smooth((p+.18-branch.start)/.3);node?.style.setProperty('stroke-dashoffset',String(1-growth))})
-   foliage.current.forEach((node,i)=>{const item=treeFoliage[i],growth=smooth((p-item.start)/.2),fall=smooth((p-.82)/.18);node?.setAttribute('transform',`translate(${item.x},${item.y}) rotate(${item.rotation}) scale(${item.size*growth})`);node?.style.setProperty('opacity',String(growth*(1-fall*.28)));node?.style.setProperty('color',mix([78+i%4*14,128+i%3*12,59],[204+i%3*14,146+i%4*10,44],autumn))})
+   treePaths.current.forEach((node,i)=>{const branch=treeBranches[i],growth=smooth((p-branch.start)/.055);node?.style.setProperty('stroke-dashoffset',String(1-growth));node?.style.setProperty('opacity',growth>.001?'1':'0')})
+   foliage.current.forEach((node,i)=>{const item=treeFoliage[i],growth=smooth((p-item.start)/.15),fall=smooth((p-(.76+(i%19)*.006))/.2),x=item.x+Math.sin(fall*8+i)*fall*75,y=item.y+fall*(180+i%7*35);node?.setAttribute('transform',`translate(${x},${y}) rotate(${item.rotation+fall*(i%2?115:-135)}) scale(${item.size*growth})`);node?.style.setProperty('opacity',String(growth*(1-fall*.98)));node?.style.setProperty('color',mix([59+i%4*13,115+i%3*12,46],[204+i%3*14,146+i%4*10,44],autumn))})
    if(pending.current!==null&&p>.87){const index=pending.current;pending.current=null;activeRef.current=index;setActive(index);requestAnimationFrame(()=>panel.current?.focus({preventScroll:true}))}
    features.forEach((_,i)=>{
-    const growth=smooth((p-(.76+i*.018))/.12),fall=smooth((p-(.79+i*.018))/.12),from=treeBranches[treeBranches.length-1-i*7],endX=220+i%3*330,endY=490+Math.floor(i/3)*185
-    const x=from.x+(endX-from.x)*fall+Math.sin(fall*Math.PI*3+i)*32*Math.sin(fall*Math.PI),y=from.y+(endY-from.y)*fall
-    const rotation=(i%2?1:-1)*(12+Math.sin(fall*Math.PI*2)*22),leaf=leaves.current[i]
-    leaf?.setAttribute('transform',`translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rotation.toFixed(2)}) scale(${.63*(.3+growth*.7)})`)
+    const growth=smooth((p-(.71+i*.012))/.1),fall=smooth((p-(.72+i*.012))/.22),from=treeBranches[treeBranches.length-1-i*7],rest=restingLeaves[i]
+    const drift=Math.sin(fall*Math.PI*(2.2+i*.13)+i)*Math.sin(fall*Math.PI)
+    const x=from.x+(rest.x-from.x)*fall+drift*(55+i*7),y=from.y+(rest.y-from.y)*fall+Math.sin(fall*Math.PI*2+i)*Math.sin(fall*Math.PI)*20
+    const rotation=rest.angle*fall+Math.sin(fall*Math.PI*3+i)*Math.sin(fall*Math.PI)*45,leaf=leaves.current[i]
+    leaf?.setAttribute('transform',`translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${rotation.toFixed(2)}) scale(${(.57+i%3*.025)*(.3+growth*.7)})`)
     leaf?.style.setProperty('opacity',String(growth));leaf?.style.setProperty('pointer-events',growth>.65?'auto':'none');leaf?.setAttribute('tabindex',growth>.65?'0':'-1');leaf?.setAttribute('aria-hidden',String(growth<.05))
     if(activeRef.current===i&&growth<.08){activeRef.current=null;setActive(null)}
    })
@@ -79,8 +79,8 @@ export function VineWorkspace(){
     <linearGradient id={id+'bark'}><stop stopColor="#392e27"/><stop offset=".48" stopColor="#ad8b66"/><stop offset="1" stopColor="#554331"/></linearGradient>
     <linearGradient id={id+'leaf'} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#ecd485"/><stop offset=".45" stopColor="#cfaa49"/><stop offset="1" stopColor="#8a5d2c"/></linearGradient>
     <linearGradient id={id+'leafEdge'}><stop stopColor="#f5d78a"/><stop offset="1" stopColor="#a67c38"/></linearGradient>
-   </defs><ellipse cx="550" cy="739" rx="210" ry="14" fill="#000" opacity=".18"/>
-   <g className="season-tree-winter" fill="none" stroke="#8c7b65" strokeLinecap="round" opacity=".65">{treeBranches.map((branch,i)=><path key={i} d={branch.d} strokeWidth={Math.max(1,branch.width*.45)}/>)}</g><g className="season-tree-branches" fill="none" stroke={'url(#'+id+'bark)'} strokeLinecap="round">{treeBranches.map((branch,i)=><path key={i} ref={node=>{treePaths.current[i]=node}} d={branch.d} strokeWidth={branch.width} pathLength="1" strokeDasharray="1" strokeDashoffset="1"/>)}</g>
+   </defs><path className="tree-root-flare" d="M508 735Q534 696 526 669L571 669Q565 713 596 735Q553 721 508 735Z" fill={'url(#'+id+'bark)'}/><ellipse cx="550" cy="739" rx="210" ry="14" fill="#000" opacity=".18"/>
+   <g className="season-tree-winter" fill="none" stroke="#8c7b65" strokeLinecap="round" opacity=".65">{treeBranches.slice(0,1).map((branch,i)=><path key={i} d={branch.d} strokeWidth={branch.width}/>)}</g><g className="season-tree-branches" fill="none" stroke={'url(#'+id+'bark)'} strokeLinecap="round">{treeBranches.map((branch,i)=><path key={i} ref={node=>{treePaths.current[i]=node}} d={branch.d} strokeWidth={branch.width} pathLength="1" strokeDasharray="1" strokeDashoffset="1"/>)}</g>
    <g className="season-tree-foliage" pointerEvents="none" aria-hidden="true">{treeFoliage.map((_,i)=><g key={i} ref={node=>{foliage.current[i]=node}} opacity="0"><path d={ivyLeaf} fill="currentColor"/><path d="M-106 35L23-29L35-125M23-29L-62-102M23-29L132-56M23-29L62 79M23-29L-40 81" fill="none" stroke="#f1e3b2" strokeOpacity=".28" strokeWidth="3"/></g>)}</g>
    {features.map((item,i)=><g key={item.path} ref={node=>{leaves.current[i]=node}} className={'vine-leaf'+(active===i?' selected':'')} role="button" tabIndex={-1} aria-hidden={true} aria-label={item.pest+' · 打开'+item.label} aria-expanded={active===i} aria-controls={id+'card'} onClick={event=>{event.stopPropagation();choose(i)}} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose(i)}}}>
     <g className="vine-leaf-surface"><g className="vine-leaf-shape" transform={i%2===0?'scale(1 1)':'scale(-1 1)'}><path className="leaf-halo" d={ivyLeaf}/><path d={ivyLeaf} fill={'url(#'+id+'leaf)'} stroke={'url(#'+id+'leafEdge)'} strokeWidth="1.5"/>
