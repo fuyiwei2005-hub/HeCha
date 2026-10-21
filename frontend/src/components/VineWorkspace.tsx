@@ -5,11 +5,17 @@ import { Icon } from './Icon'
 import { FieldPest } from './FieldPest'
 
 const ivyLeaf='M-112 28 Q-91 3-111-25 L-136-62 L-77-60 Q-66-66-65-77 L-72-112 L-16-87 Q-7-83 3-94 L36-139 L64-84 Q70-69 85-68 L145-59 L111-16 Q100-2 114 9 L139 38 L81 50 Q68 53 67 70 L65 91 L14 67 Q-2 60-13 72 L-44 92 L-50 57 Q-53 42-68 44 L-112 51Z'
-const treeBranches:{d:string,width:number,start:number,x:number,y:number}[]=[]
+type Branch={d:string,outline:string,grain:string[],width:number,x:number,y:number}
+const treeBranches:Branch[]=[]
 function growBranch(x:number,y:number,length:number,angle:number,depth:number,seed:number){
  const endX=x+Math.cos(angle)*length,endY=y+Math.sin(angle)*length
- treeBranches.push({d:`M${x} ${y} Q${x+Math.cos(angle+.24)*length*.48} ${y+Math.sin(angle+.24)*length*.48} ${endX} ${endY}`,width:Math.max(1.1,depth*depth*1.05),start:depth>=4?.08:.13+(3-depth)*.055,x:endX,y:endY})
- if(depth>0){growBranch(endX,endY,length*(.68+Math.sin(seed)*.035),angle-.52,depth-1,seed+1);growBranch(endX,endY,length*(.7+Math.cos(seed)*.025),angle+.55,depth-1,seed+3)}
+ const bend=.13+Math.sin(seed*1.7)*.16,cx=x+Math.cos(angle+bend)*length*.52,cy=y+Math.sin(angle+bend)*length*.52,width=Math.max(1.1,depth*depth*1.05)
+ const points=Array.from({length:23},(_,i)=>{const t=i/22,u=1-t,dx=2*u*(cx-x)+2*t*(endX-cx),dy=2*u*(cy-y)+2*t*(endY-cy),l=Math.hypot(dx,dy);return {x:u*u*x+2*u*t*cx+t*t*endX,y:u*u*y+2*u*t*cy+t*t*endY,nx:-dy/l,ny:dx/l,r:width*.62*(1-t*.61)*(1+Math.sin(t*18+seed)*.045)}})
+ const edge=(side:number)=>points.map(p=>`${(p.x+p.nx*p.r*side).toFixed(2)},${(p.y+p.ny*p.r*side).toFixed(2)}`)
+ const outline='M'+edge(1).join('L')+'L'+edge(-1).reverse().join('L')+'Z'
+ const grain=[-.55,-.12,.35].map((offset,k)=>points.map((p,i)=>(i?'L':'M')+(p.x+p.nx*p.r*(offset+Math.sin(i*.45+seed+k)*.07)).toFixed(2)+','+(p.y+p.ny*p.r*(offset+Math.sin(i*.45+seed+k)*.07)).toFixed(2)).join(' '))
+ treeBranches.push({d:`M${x} ${y}Q${cx} ${cy} ${endX} ${endY}`,outline,grain,width,x:endX,y:endY})
+ if(depth>0){growBranch(endX,endY,length*(.66+Math.sin(seed)*.045),angle-.42-Math.sin(seed*2)*.10,depth-1,seed+1);growBranch(endX,endY,length*(.72+Math.cos(seed)*.035),angle+.49+Math.cos(seed*1.3)*.12,depth-1,seed+3)}
 }
 
 growBranch(1140,100,295,-3.02,4,2)
@@ -80,11 +86,11 @@ export function VineWorkspace(){
 
    <header className="vine-heading"><p>A YEAR IN ONE TREE</p><h2 id={id+'title'}>一树四季，<br/><span>落叶知时。</span></h2><p className="vine-instruction">随下滑见证生长，点击秋日落叶探索功能。</p></header>
    <div className="vine-art"><svg viewBox="0 0 1100 780" preserveAspectRatio="xMidYMid meet" className="vine-drawing" aria-label="随滚动从冬到秋生长的树木与六片功能落叶"><defs>
-    <linearGradient id={id+'bark'}><stop stopColor="#76533f"/><stop offset=".48" stopColor="#bc9367"/><stop offset="1" stopColor="#866046"/></linearGradient>
+    <linearGradient id={id+'bark'}><stop stopColor="#65513e"/><stop offset=".32" stopColor="#a58b68"/><stop offset=".6" stopColor="#8f7355"/><stop offset="1" stopColor="#5c4837"/></linearGradient>
     <linearGradient id={id+'leaf'} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#ecd485"/><stop offset=".45" stopColor="#cfaa49"/><stop offset="1" stopColor="#8a5d2c"/></linearGradient>
     <linearGradient id={id+'leafEdge'}><stop stopColor="#f5d78a"/><stop offset="1" stopColor="#a67c38"/></linearGradient>
    </defs><g className="tree-distant-landscape" aria-hidden="true"><path d="M0 620L85 580L160 604L260 555L350 586L440 560L540 601L680 566L780 606L920 570L1100 610V780H0Z" fill="#a7ad8b" opacity=".2"/><path d="M0 687L120 648L240 682L380 621L530 667L650 631L790 675L930 642L1100 684V780H0Z" fill="#899777" opacity=".16"/></g>
-   <g className="season-tree-branches" fill="none" stroke={'url(#'+id+'bark)'} strokeLinecap="round">{treeBranches.map((branch,i)=><g key={i}><path d={branch.d} stroke="#74513e" strokeWidth={branch.width+1.3}/><path d={branch.d} strokeWidth={branch.width}/></g>)}</g>
+   <g className="season-tree-branches" strokeLinecap="round" strokeLinejoin="round">{treeBranches.map((branch,i)=><g key={i}><path d={branch.outline} fill={'url(#'+id+'bark)'} stroke="#65503d" strokeWidth=".45"/>{branch.width>3&&branch.grain.map((d,k)=><path key={k} d={d} fill="none" stroke={k===0?'#dec29a':'#533e30'} strokeWidth={k===0?'.85':'.55'} opacity={k===0?'.4':'.22'}/>)}</g>)}</g>
    <g className="season-tree-foliage" pointerEvents="none" aria-hidden="true">{treeFoliage.map((_,i)=><g key={i} ref={node=>{foliage.current[i]=node}} opacity="0"><path d={ivyLeaf} fill="currentColor"/><path d="M-106 35L23-29L35-125M23-29L-62-102M23-29L132-56M23-29L62 79M23-29L-40 81" fill="none" stroke="#f1e3b2" strokeOpacity=".28" strokeWidth="3"/></g>)}</g>
    {features.map((item,i)=><g key={item.path} ref={node=>{leaves.current[i]=node}} className={'vine-leaf'+(active===i?' selected':'')} role="button" tabIndex={-1} aria-hidden={true} aria-label={item.pest+' · 打开'+item.label} aria-expanded={active===i} aria-controls={id+'card'} onClick={event=>{event.stopPropagation();choose(i)}} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose(i)}}}>
     <g className="vine-leaf-surface"><g className="vine-leaf-shape" transform={i%2===0?'scale(1 1)':'scale(-1 1)'}><path className="leaf-halo" d={ivyLeaf}/><path d={ivyLeaf} fill={'url(#'+id+'leaf)'} stroke={'url(#'+id+'leafEdge)'} strokeWidth="1.5"/>
