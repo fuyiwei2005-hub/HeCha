@@ -10,7 +10,7 @@ from app.services.detection_response import serialize
 
 async def search_records(db: AsyncSession, user_id: int, offset: int, limit: int,
                          media_type: str | None, status: str | None, q: str | None,
-                         start_at: datetime | None, end_at: datetime | None):
+                         start_at: datetime | None, end_at: datetime | None, field_name: str | None = None, detection_id: str | None = None):
     if media_type and media_type not in {'image', 'video'}:
         raise HTTPException(422, '记录类型无效')
     if status and status not in {'queued', 'processing', 'completed', 'failed'}:
@@ -22,6 +22,8 @@ async def search_records(db: AsyncSession, user_id: int, offset: int, limit: int
     if start_at and end_at and start_at >= end_at:
         raise HTTPException(422, '结束时间必须晚于开始时间')
     filters = [Detection.user_id == user_id]
+    if detection_id: filters.append(Detection.id == detection_id)
+    if field_name: filters.append(Detection.observation["field_name"].as_string() == field_name.strip())
     if media_type: filters.append(Detection.media_type == media_type)
     if status: filters.append(Detection.status == status)
     if start_at: filters.append(Detection.created_at >= start_at)

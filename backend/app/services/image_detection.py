@@ -12,7 +12,7 @@ from app.services.files import read_image
 from app.services.host_prior import host_prior
 
 
-async def detect_image(file, crop, user_id, db):
+async def detect_image(file, crop, user_id, db, observation=None):
     settings = get_settings()
     crop = host_prior.resolve_crop(crop.strip()) if crop and crop.strip() else None
     stored_name = None
@@ -30,13 +30,15 @@ async def detect_image(file, crop, user_id, db):
             except RuntimeError as exc:
                 raise HTTPException(503, str(exc)) from exc
             # Release the full image before the next request enters the gate.
+            from app.services.observation import assess_image
+            quality = await run_blocking(assess_image, rgb, predictions)
             del content, rgb
         predictions = host_prior.rerank(predictions, crop).predictions
         item = Detection(
             id=str(uuid4()), user_id=user_id, media_type="image", status="completed",
             original_name=(file.filename or "image")[:255], stored_name=stored_name,
             predictions=predictions, result_path=result_name, crop=crop,
-            created_at=utcnow(),
+            created_at=utcnow(), observation=observation, quality=quality,
             **analysis_request(predictions),
         )
         db.add(item)

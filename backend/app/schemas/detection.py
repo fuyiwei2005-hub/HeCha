@@ -31,6 +31,9 @@ class DetectionResponse(BaseModel):
     analysis_error: str | None = None
     # RAG 引用溯源列表：[{ref, id, title, body, source}, ...]
     references: list[dict[str, Any]] | None = None
+    observation: dict[str, Any] | None = None
+    quality: dict[str, Any] | None = None
+    feedback_note: str | None = None
     feedback: str | None = None
     error: str | None = None
     created_at: datetime

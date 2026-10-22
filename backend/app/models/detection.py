@@ -23,6 +23,8 @@ class Detection(Base):
     # 视频专用：抽帧统计与转码结果（fps/时长/采样帧数/是否 H.264）
     # 让前端能判断「结果是否完整」，而不是只看到一个目标数
     video_meta: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    observation: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    quality: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     result_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     analysis: Mapped[str | None] = mapped_column(Text, nullable=True)
     analysis_status: Mapped[str] = mapped_column(String(24), default="disabled", server_default="disabled", index=True)

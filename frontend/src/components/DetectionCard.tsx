@@ -1,3 +1,5 @@
+import { ObservationTools } from './ObservationTools'
+import { originalImage } from '../api'
 import { VideoProgress } from './VideoProgress'
 import { AnalysisStatus } from './AnalysisStatus'
 import { VideoTimeline } from './VideoTimeline'
@@ -102,6 +104,15 @@ export function DetectionCard({
     }
   }, [chatOpen, item.id])
 
+  const [original,setOriginal]=useState<string|null>(null),[showOriginal,setShowOriginal]=useState(false),[loadingOriginal,setLoadingOriginal]=useState(false)
+  useEffect(()=>()=>{if(original)URL.revokeObjectURL(original)},[original])
+  async function compare(){
+    if(loadingOriginal)return
+    if(showOriginal){setShowOriginal(false);return}
+    if(original){setShowOriginal(true);return}
+    setLoadingOriginal(true)
+    try{const blob=await originalImage(item.id);setOriginal(URL.createObjectURL(blob));setShowOriginal(true)}catch(e){onError(e)}finally{setLoadingOriginal(false)}
+  }
   const isImage = item.media_type === 'image'
   const hasRefs = !!item.references?.length
 
@@ -115,6 +126,8 @@ export function DetectionCard({
       .catch((err) => { if (!cancelled) onError(err) })
     return () => { cancelled = true }
   }, [item.id, item.result_url])
+
+  const displayUrl=showOriginal?original:mediaUrl
 
   async function vote_(rating: 'good' | 'bad') {
     if (vote) return
@@ -168,16 +181,16 @@ export function DetectionCard({
   }
 
   return (
-    <article className="card detection rise">
+    <article id={`record-${item.id}`} className="card detection rise">
       {/* ── 媒体 ── */}
       <div className="detection-media">
-        {mediaUrl && isImage ? (
+        {displayUrl && isImage ? (
           <>
             <img
-              src={mediaUrl}
-              alt={`${item.original_name} 的识别标注图`}
+              src={displayUrl}
+              alt={`${item.original_name} 的${showOriginal?'原图':'识别标注图'}`}
               loading="lazy"
-              onClick={() => onZoom(mediaUrl, item.original_name)}
+              onClick={() => onZoom(displayUrl, item.original_name)}
             />
             <span className="media-zoom">点击放大</span>
           </>
@@ -208,6 +221,7 @@ export function DetectionCard({
 
       <div className="detection-body">
         {/* ── 标题行 ── */}
+        {isImage&&mediaUrl&&<button className="btn btn-sm" disabled={loadingOriginal} onClick={compare}>{loadingOriginal?'正在加载原图…':showOriginal?'查看标注图':'查看原图对比'}</button>}
         {mediaUrl && <a className="btn btn-sm btn-ghost" href={mediaUrl} download>下载标注结果</a>}
         <div className="detection-top">
           <div className="detection-title">
@@ -273,6 +287,7 @@ export function DetectionCard({
         {isImage && preds.some((p) => p.prior) && <p className="pest-avg">
           已结合作物信息调整候选排序，进度条显示原始模型置信度。
         </p>}
+        <ObservationTools item={item} onUpdated={onUpdated} onError={onError}/>
         <VideoProgress item={item} onUpdated={onUpdated} onError={onError}/>
         <AnalysisStatus item={item} onUpdated={onUpdated} onError={onError} />
         {/* ── AI 防治建议（含 RAG 溯源） ── */}

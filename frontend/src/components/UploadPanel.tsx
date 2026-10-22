@@ -105,7 +105,7 @@ export function UploadPanel({
       </div>
 
       <div className="upload-controls">
-      {mode === 'image' && <div className="upload-row">
+      {<div className="upload-row">
         <label className="crop-field" style={{ flex: '1 1 180px' }}>
           <span>这是什么作物（可选）</span>
           <select

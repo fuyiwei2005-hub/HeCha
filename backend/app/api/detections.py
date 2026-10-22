@@ -18,6 +18,7 @@ from app.models.detection import Detection
 from app.models.chat_message import ChatMessage
 from app.schemas.detection import DetectionResponse, DetectionPage
 from app.services import image_detection
+from app.services.observation import Observation, parse_observation
 from app.services.analysis_jobs import analysis_request
 from app.services.detection_response import serialize
 from app.services.host_prior import host_prior
@@ -48,10 +49,11 @@ async def list_crops(user: User = Depends(current_user)):
 async def detect_image(
     file: UploadFile = File(...),
     crop: str | None = Form(None),
+    observation: str | None = Form(None),
     user: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    item = await image_detection.detect_image(file, crop, user.id, db)
+    item = await image_detection.detect_image(file, crop, user.id, db, parse_observation(observation))
     return serialize(item)
 
 
@@ -80,9 +82,11 @@ async def search_detections(
     media_type: str | None = None, status: str | None = None,
     q: str | None = Query(None, max_length=100),
     start_at: datetime | None = None, end_at: datetime | None = None,
+    field_name: str | None = Query(None, max_length=80),
+    detection_id: str | None = Query(None, max_length=36),
 ):
     from app.services.record_search import search_records
-    return await search_records(db, user.id, offset, limit, media_type, status, q, start_at, end_at)
+    return await search_records(db, user.id, offset, limit, media_type, status, q, start_at, end_at, field_name, detection_id)
 
 
 @router.get("/{detection_id}", response_model=DetectionResponse)
@@ -97,6 +101,39 @@ async def get_detection(
     if not item:
         raise HTTPException(404, "Detection not found")
     return serialize(item)
+
+
+@router.get("/{detection_id}/comparison")
+async def compare_pests(detection_id: str, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    item = await db.scalar(select(Detection).where(Detection.id == detection_id, Detection.user_id == user.id))
+    if not item:
+        raise HTTPException(404, "Detection not found")
+    from app.services.observation import comparison_notes
+    from app.services.admission import run_blocking
+    return await run_blocking(comparison_notes, item.predictions or [], item.media_type)
+
+
+@router.patch("/{detection_id}/observation", response_model=DetectionResponse)
+async def save_observation(detection_id: str, body: Observation,
+    user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    item = await db.scalar(select(Detection).where(Detection.id == detection_id, Detection.user_id == user.id))
+    if not item:
+        raise HTTPException(404, "Detection not found")
+    item.observation = body.model_dump()
+    await db.commit()
+    await db.refresh(item)
+    return serialize(item)
+
+
+@router.get("/{detection_id}/original")
+async def original_file(detection_id: str, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    item = await db.scalar(select(Detection).where(Detection.id == detection_id, Detection.user_id == user.id))
+    if not item or item.media_type != "image":
+        raise HTTPException(404, "Original image not found")
+    path = (settings.upload_dir / item.stored_name).resolve()
+    if settings.upload_dir.resolve() not in path.parents or not path.is_file():
+        raise HTTPException(410, "原图已被清理")
+    return FileResponse(path, headers={"Cache-Control": "private, no-store"})
 
 
 # ── 结果文件的短时签名票据 ────────────────────────────────────────────
@@ -349,20 +386,21 @@ async def submit_feedback(
 @router.post("/{detection_id}/analysis", response_model=DetectionResponse, status_code=202)
 async def retry_analysis(
     detection_id: str, user: User = Depends(current_user), db: AsyncSession = Depends(get_db),
+    refresh: bool = Query(False),
 ):
     item = await db.scalar(select(Detection).where(Detection.id == detection_id, Detection.user_id == user.id))
     if not item:
         raise HTTPException(404, "Detection not found")
     if item.status != "completed":
         raise HTTPException(409, "请等待识别完成")
-    if item.analysis_status in {"queued", "processing", "completed"}:
+    if item.analysis_status in {"queued", "processing"} or (item.analysis_status == "completed" and not refresh):
         return serialize(item)
     values = analysis_request(item.predictions)
     if values["analysis_status"] != "queued":
         raise HTTPException(409, "没有可解读的结果，或 AI 服务尚未配置")
     await db.execute(update(Detection).where(
         Detection.id == item.id, Detection.user_id == user.id,
-        Detection.analysis_status.in_(["failed", "disabled", "skipped"]),
+        Detection.analysis_status.in_(["failed", "disabled", "skipped"] + (["completed"] if refresh else [])),
     ).values(**values))
     await db.commit()
     await db.refresh(item)

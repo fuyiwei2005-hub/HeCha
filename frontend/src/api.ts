@@ -1,9 +1,12 @@
+export type Observation = {field_name: string; growth_stage: string; severity: string; notes: string; correction: string}
+export const emptyObservation: Observation = {field_name:'',growth_stage:'',severity:'',notes:'',correction:''}
 export type Prediction = {
   class: string; class_cn?: string; confidence: number; bbox: Record<string, number>
   raw_confidence?: number; ranking_score?: number; is_primary?: boolean; is_suspect?: boolean
   prior?: { level: string; factor: number; crop_label: string; note: string }
 }
 export type Detection = {
+  observation?: Observation | null; quality?: {width:number;height:number;warnings:string[];method:string} | null; feedback_note?: string | null;
   feedback?: 'good' | 'bad' | null;
   id: string; media_type: 'image' | 'video'; original_name: string;
   status: string; predictions: Prediction[] | { time_ms: number; detections: Prediction[] }[];
@@ -138,19 +141,37 @@ export const listCrops = () =>
 export const fetchStatistics = () => request<Statistics>('/statistics')
 export const fetchHealth = () => request<{ detector: 'mock' | 'yolo' | 'unavailable'; detector_ready: boolean }>('/health')
 
-export const uploadImage = (file: File, crop?: string) => {
-  const body = new FormData()
-  body.append('file', file)
-  // 作物上下文会喂给寄主先验做重排 + 给大模型做上下文，
-  // 不传等于白瞎了后端这套能力（同时也让防治建议的用药口径不准）
-  if (crop) body.append('crop', crop)
-  return request<Detection>('/detections/image', { method: 'POST', body })
+function upload(path: string, file: File, crop?: string, observation?: Observation, progress?: (value:number)=>void) {
+  return new Promise<Detection>((resolve,reject)=>{
+    const xhr=new XMLHttpRequest(), body=new FormData()
+    body.append('file',file)
+    if(crop) body.append('crop',crop)
+    if(observation) body.append('observation',JSON.stringify(observation))
+    xhr.open('POST',API_URL+path);xhr.timeout=120000
+    const token=localStorage.getItem('token')
+    if(token) xhr.setRequestHeader('Authorization','Bearer '+token)
+    xhr.upload.onprogress=e=>{if(e.lengthComputable)progress?.(Math.round(e.loaded/e.total*100))}
+    xhr.onerror=()=>reject(new Error('上传连接中断，请先查看历史记录，再决定是否重试'))
+    xhr.ontimeout=()=>reject(new Error('上传请求超时，请先查看历史记录确认是否已收到'))
+    xhr.onload=()=>{
+      if(xhr.status===401){localStorage.removeItem('token');reject(new SessionExpiredError());return}
+      try {const data=JSON.parse(xhr.responseText)
+        if(xhr.status>=200&&xhr.status<300)resolve(data)
+        else reject(new Error(typeof data.detail==='string'?data.detail:`上传失败 (${xhr.status})`))
+      }catch{reject(new Error('无法读取上传结果，请查看历史记录后重试'))}
+    }
+    xhr.send(body)
+  })
 }
-
-export const uploadVideo = (file: File) => {
-  const body = new FormData()
-  body.append('file', file)
-  return request<Detection>('/videos', { method: 'POST', body })
+export const uploadImage=(file:File,crop?:string,observation?:Observation,progress?:(v:number)=>void)=>upload('/detections/image',file,crop,observation,progress)
+export const uploadVideo=(file:File,crop?:string,observation?:Observation,progress?:(v:number)=>void)=>upload('/videos',file,crop,observation,progress)
+export const saveObservation=(id:string,body:Observation)=>request<Detection>(`/detections/${id}/observation`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+export const refreshAdvice=(id:string)=>request<Detection>(`/detections/${id}/analysis?refresh=true`,{method:'POST'})
+export async function originalImage(id:string):Promise<Blob> {
+  const response=await fetch(`${API_URL}/detections/${id}/original`,{headers:{Authorization:'Bearer '+localStorage.getItem('token')},signal:AbortSignal.timeout(30000)})
+  if(response.status===401){localStorage.removeItem('token');throw new SessionExpiredError()}
+  if(!response.ok)throw new Error(response.status===410?'原图已被清理':'原图加载失败')
+  return response.blob()
 }
 
 export const deleteDetection = (id: string) => request(`/detections/${id}`, { method: 'DELETE' })
@@ -213,7 +234,7 @@ export const submitFeedback = (detectionId: string, rating: 'good' | 'bad', note
     body: JSON.stringify(note ? { rating, note } : { rating }),
   })
 
-export type RecordFilters = {offset: number; limit: number; media_type?: string; status?: string; q?: string; start_at?: string; end_at?: string}
+export type RecordFilters = {detection_id?: string; field_name?: string; offset: number; limit: number; media_type?: string; status?: string; q?: string; start_at?: string; end_at?: string}
 export type RecordPage = {items: Detection[]; total: number; offset: number; limit: number}
 export function searchDetections(filters: RecordFilters, signal?: AbortSignal) {
   const query = new URLSearchParams()
@@ -221,3 +242,6 @@ export function searchDetections(filters: RecordFilters, signal?: AbortSignal) {
   return request<RecordPage>('/detections/search?'+query, {signal})
 }
 export const retryVideo = (id: string) => request<Detection>(`/videos/${encodeURIComponent(id)}/retry`, {method:'POST'})
+
+export type Comparison = {id:string;title:string;symptoms:string;source:string;detected:boolean}
+export const comparePests=(id:string)=>request<Comparison[]>(`/detections/${id}/comparison`)

@@ -22,9 +22,10 @@ export function RecordsPage() {
   const media = ['image','video'].includes(params.get('type') || '') ? params.get('type')! : ''
   const status = ['queued','processing','completed','failed'].includes(params.get('status') || '') ? params.get('status')! : ''
   const [keyword,setKeyword] = useState(params.get('q') || ''), [start,setStart] = useState(params.get('start') || ''), [end,setEnd] = useState(params.get('end') || '')
+  const [field,setField]=useState(params.get('field')||'')
   const [draftStatus,setDraftStatus] = useState(status), [clearing,setClearing] = useState(false)
-  useEffect(() => {setKeyword(params.get('q') || '');setStart(params.get('start') || '');setEnd(params.get('end') || '');setDraftStatus(status)}, [raw])
-  const records = useRecordPage({offset:(page-1)*PAGE_SIZE,limit:PAGE_SIZE,media_type:media,status,q:params.get('q')?.slice(0,100),start_at:dateBoundary(params.get('start')),end_at:dateBoundary(params.get('end'),true)},context.onError)
+  useEffect(() => {setField(params.get('field')||'');setKeyword(params.get('q') || '');setStart(params.get('start') || '');setEnd(params.get('end') || '');setDraftStatus(status)}, [raw])
+  const records = useRecordPage({detection_id:params.get('record')||undefined,field_name:params.get('field')||undefined,offset:(page-1)*PAGE_SIZE,limit:PAGE_SIZE,media_type:media,status,q:params.get('q')?.slice(0,100),start_at:dateBoundary(params.get('start')),end_at:dateBoundary(params.get('end'),true)},context.onError)
   const pages = Math.max(1,Math.ceil(records.total/PAGE_SIZE))
   function change(values: Record<string,string>, reset = true) {
     const next = new URLSearchParams(params)
@@ -36,7 +37,7 @@ export function RecordsPage() {
   function apply(event: FormEvent) {
     event.preventDefault()
     if (start && end && start > end) {context.onError(new Error('开始日期不能晚于结束日期'));return}
-    change({q:keyword.trim(),start,end,status:draftStatus})
+    change({q:keyword.trim(),field:field.trim(),start,end,status:draftStatus})
   }
   async function clear() {
     if (!confirm('确定清空全部检测记录及结果文件？此操作包括当前筛选之外的记录。')) return
@@ -51,6 +52,7 @@ export function RecordsPage() {
       {['','image','video'].map(value => <button className="chip" key={value} aria-pressed={media===value} onClick={() => change({type:value})}>{!value?'全部':value==='image'?'图片':'视频'}</button>)}
     </div></div>
     <form className="record-search" onSubmit={apply}>
+      <label>地块名称<input className="input" value={field} maxLength={80} onChange={e=>setField(e.target.value)} placeholder="按地块查看连续观察"/></label>
       <label>关键词<input className="input" value={keyword} maxLength={100} onChange={e=>setKeyword(e.target.value)} placeholder="文件名、作物或虫种"/></label>
       <label>开始日期<input className="input" type="date" value={start} onChange={e=>setStart(e.target.value)}/></label>
       <label>结束日期<input className="input" type="date" min={start||undefined} value={end} onChange={e=>setEnd(e.target.value)}/></label>

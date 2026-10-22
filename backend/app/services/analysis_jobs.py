@@ -64,6 +64,8 @@ async def process_analysis(ctx, detection_id: str, attempt: str):
             return
         predictions = normalize_predictions(item.predictions, item.media_type)
         media_type, crop, user_id = item.media_type, item.crop, item.user_id
+        from app.services.observation import observation_hint
+        field_hint = observation_hint(item)
 
     text, refs, error = None, [], None
     try:
@@ -71,7 +73,7 @@ async def process_analysis(ctx, detection_id: str, attempt: str):
         await check_llm_quota(user_id)
         async with asyncio.timeout(get_settings().analysis_job_timeout_seconds):
             text, refs = await llm.analyze(predictions, media_type,
-                                          crop_hint=host_prior.hint_for_llm(crop, predictions) if crop else None)
+                                          crop_hint="\n".join(filter(None, [host_prior.hint_for_llm(crop, predictions) if crop else None, field_hint])) or None)
         if not text:
             error = "建议生成失败，可稍后重试"
     except HTTPException as exc:

@@ -19,3 +19,5 @@ const basename = location.pathname.startsWith('/experimental') ? '/experimental'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><ErrorBoundary><QueryClientProvider client={client}><BrowserRouter basename={basename}><App/></BrowserRouter></QueryClientProvider></ErrorBoundary></React.StrictMode>,
 )
+
+import './observation.css'

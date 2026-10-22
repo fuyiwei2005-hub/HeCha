@@ -1,3 +1,4 @@
+import { TaskNotifications } from './TaskNotifications'
 import { ContactFooter } from './ContactFooter'
 import { usePageMotion } from '../hooks/usePageMotion'
 import { Icon, BrandMark } from './Icon'
@@ -64,11 +65,11 @@ export function AppLayout({username, onLogout, context}: {username: string; onLo
     <div ref={content} className={"product-content" + (location.pathname === '/' ? ' page-home' : '')}>
       <header className="topbar"><div className="topbar-inner">
         <NavLink className="brand" to="/"><span className="brand-mark"><BrandMark/></span><span className="brand-text"><strong>禾察</strong><span>智能植保决策平台</span></span></NavLink>
-        <div className="topbar-right"><span className="account-name">{username}</span><button className="btn btn-sm btn-ghost" onClick={onLogout}>退出登录</button></div>
+        <div className="topbar-right">{location.pathname==='/'&&<Link className="btn btn-sm direct-recognition" to="/detect">直接识别</Link>}<span className="account-name">{username}</span><button className="btn btn-sm btn-ghost" onClick={onLogout}>退出登录</button></div>
       </div></header>
       <div ref={stage} className="route-stage"><main className="shell"><div className="route-heading">{location.pathname!=='/'&&<nav className="page-breadcrumb" aria-label="当前位置"><Link to="/">首页</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span></nav>}<p className="page-kicker">禾察 · 让田间观察更清晰</p><h1>{title}</h1></div>{health.data?.detector === 'mock' && <p className="alert alert-warn" role="status">当前为演示模式，仅验证功能流程，未启用真实识别模型。</p>}
       {health.data?.detector === 'unavailable' && <p className="alert alert-error" role="status">识别模型暂不可用，请检查模型配置后再上传。</p>}
-      <Outlet context={context}/></main>
+      <TaskNotifications onError={context.onError}/><Outlet context={context}/></main>
       {location.pathname === '/' ? <ContactFooter/> : <footer className="product-footer"><span>禾察 · 农作物害虫智能识别与植保决策平台</span><Link to="/#contact">联系我们 ↗</Link></footer>}</div>
     </div>
   </>
